@@ -1,0 +1,18 @@
+# For docs:
+sphinx>=1.4
+ipykernel
+nbsphinx
+# For package:
+numpy
+scipy
+pandas
+matplotlib
+scikit-learn
+obspy
+numba
+# For testing
+pytest
+pytest-cov
+nbformat
+nbconvert
+ipykernel

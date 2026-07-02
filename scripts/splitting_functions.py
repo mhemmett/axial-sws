@@ -814,11 +814,193 @@ def calculate_incidence_angle_eigenvalue_jurkevics_for_organized_waveforms(organ
         # Show how many pass typical QC threshold (e.g., < 30°)
         passing_inc = sum(1 for v in valid_incidence_angles if v <= 30.0)
         print(f"  Passing QC (≤30°): {passing_inc}/{len(valid_incidence_angles)} ({100*passing_inc/len(valid_incidence_angles):.1f}%)")
-    
+
     return organized_waveforms
 
 
-def calculate_rectilinearity(trace_z, trace_n, trace_e, p_arrival_offset=4.0, 
+def calculate_incidence_angle_eigenvalue_jurkevics_s(trace_z, trace_n, trace_e, s_arrival_offset,
+                                                       analysis_window=0.12, s_window_before=0.02):
+    """
+    Calculate S-wave ray incidence angle using Jurkevics (1988)-style polarization analysis,
+    applied to the S-wave window instead of the P-wave window.
+
+    Physical basis: P-wave particle motion is longitudinal (along the ray), so the dominant
+    eigenvector's angle from vertical directly gives the ray incidence angle via arccos
+    (see calculate_incidence_angle_eigenvalue_jurkevics). S/SV particle motion is transverse
+    to the ray, i.e. rotated 90 degrees from the ray direction within the vertical (sagittal)
+    plane. If the ray incidence angle is theta, the SV polarization direction therefore makes
+    angle (90-theta) with vertical, so |eigvec1_Z| = sin(theta) rather than cos(theta) - hence
+    this function uses arcsin in place of the P-wave function's arccos.
+
+    Reference: Jurkevics, A. (1988). Polarization analysis of three-component array data.
+
+    Parameters:
+    -----------
+    trace_z, trace_n, trace_e : obspy.Trace
+        Vertical (Z-up), North, and East component traces
+    s_arrival_offset : float
+        Time of S-arrival from trace start (seconds)
+    analysis_window : float
+        Total window duration for S-wave analysis (seconds), default=0.12s
+    s_window_before : float
+        Time before S-arrival to start window (seconds), default=0.02s
+
+    Returns:
+    --------
+    float
+        Incidence angle in degrees (0-90°), where 0° is vertical incidence. Returns NaN on
+        any failure (missing data, degenerate window, etc.) rather than raising, matching the
+        P-wave function's error-handling convention.
+
+    Note:
+    -----
+    Z-axis convention: Positive upward (standard seismological convention).
+    The eigenvector is flipped to point downward if needed, exactly as in the P-wave version,
+    before the arcsin is taken.
+    """
+    try:
+        window_start = s_arrival_offset - s_window_before
+        window_end = s_arrival_offset - s_window_before + analysis_window
+
+        z_data = trace_z.slice(window_start, window_end).data
+        n_data = trace_n.slice(window_start, window_end).data
+        e_data = trace_e.slice(window_start, window_end).data
+
+        # Construct data matrix (N_samples x 3) with Z, N, E columns (Z upward)
+        data_zne = np.column_stack([z_data, n_data, e_data])
+
+        # Eigenvalue decomposition using Jurkevics method
+        eigvals, eigvecs = cov_eig(data_zne)
+        eigvec1 = eigvecs[:, 0]
+
+        # Make sure the eigenvector points towards the ground (-Z)
+        if eigvec1[0] >= 0:
+            eigvec1 = -eigvec1
+
+        # S/SV polarization is transverse to the ray: |eigvec1_Z| = sin(incidence), not cos.
+        inc = np.arcsin(np.clip(np.abs(eigvec1[0]), 0.0, 1.0)) * 180 / np.pi
+
+        return inc
+
+    except Exception as e:
+        print(f"S-wave Jurkevics incidence angle calculation error: {e}")
+        return np.nan
+
+
+def calculate_incidence_angle_eigenvalue_jurkevics_s_for_organized_waveforms(organized_waveforms,
+                                                                              s_arrival_variable='s_arrival_time',
+                                                                              analysis_window=0.12):
+    """
+    Calculate S-wave eigenvalue/polarization-based incidence angle (see
+    calculate_incidence_angle_eigenvalue_jurkevics_s) for all events in organized_waveforms.
+
+    Mirrors calculate_incidence_angle_eigenvalue_jurkevics_for_organized_waveforms exactly in
+    structure, but windows on the S arrival and stores results under a distinct field name so
+    the P-wave incidence remains available alongside it for comparison.
+
+    Parameters:
+    -----------
+    organized_waveforms : dict
+        Dictionary with event IDs as keys, containing event data, traces, and metadata
+    s_arrival_variable : str
+        Name of variable containing S-arrival time offset from trace start
+    analysis_window : float
+        Window duration for S-wave analysis (seconds), default=0.12s
+
+    Returns:
+    --------
+    dict
+        Updated organized_waveforms with S-wave eigenvalue incidence angle values stored in
+        'incidence_eigenvalue_jurkevics_s' field
+    """
+
+    print(f"Calculating S-wave eigenvalue-based incidence angle for {len(organized_waveforms)} events...")
+    print(f"S-arrival variable: {s_arrival_variable}, Analysis window: {analysis_window}s")
+
+    success_count = 0
+
+    for event_id, event_data in organized_waveforms.items():
+        print(f"\nProcessing event {event_id}...")
+
+        datetime_utc = event_data.get('datetime')
+        s_arrival_relative = event_data.get(str(s_arrival_variable))
+
+        if datetime_utc is None or s_arrival_relative is None:
+            print(f"  Missing datetime or S-arrival time")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        s_arrival_offset = UTCDateTime(datetime_utc) + float(s_arrival_relative)
+
+        event_traces = event_data.get('traces', [])
+        if not event_traces:
+            print(f"  No traces found for event {event_id}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        if isinstance(event_traces, list):
+            event_stream = obspy.Stream(event_traces)
+        else:
+            event_stream = event_traces
+
+        trace_z = None
+        trace_n = None
+        trace_e = None
+
+        for tr in event_stream:
+            component = tr.stats.channel[-1].upper()
+            if component == 'Z':
+                trace_z = tr
+            elif component in ['N', '1']:
+                trace_n = tr
+            elif component in ['E', '2']:
+                trace_e = tr
+
+        if trace_z is None or trace_n is None or trace_e is None:
+            print(f"  Missing components: Z={trace_z is not None}, "
+                  f"N={trace_n is not None}, E={trace_e is not None}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        try:
+            incidence_angle = calculate_incidence_angle_eigenvalue_jurkevics_s(
+                trace_z, trace_n, trace_e,
+                s_arrival_offset=s_arrival_offset,
+                analysis_window=analysis_window
+            )
+
+            event_data['incidence_eigenvalue_jurkevics_s'] = incidence_angle
+
+            print(f"  S-wave eigenvalue incidence angle: {incidence_angle:.1f}°")
+
+            if not np.isnan(incidence_angle):
+                success_count += 1
+
+        except Exception as e:
+            print(f"  Error calculating S-wave eigenvalue incidence angle: {e}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+
+    print(f"\n{'='*60}")
+    print("S-wave Eigenvalue Incidence Angle Calculation Complete")
+    print(f"{'='*60}")
+    print(f"Events with valid S-wave eigenvalue incidence angle: {success_count}/{len(organized_waveforms)}")
+
+    incidence_angle_values = [data.get('incidence_eigenvalue_jurkevics_s', np.nan) for data in organized_waveforms.values()]
+    valid_incidence_angles = [v for v in incidence_angle_values if not np.isnan(v)]
+
+    if valid_incidence_angles:
+        print(f"\nS-wave Eigenvalue Incidence Angle Statistics:")
+        print(f"  Range: {min(valid_incidence_angles):.1f}° to {max(valid_incidence_angles):.1f}°")
+        print(f"  Mean: {np.mean(valid_incidence_angles):.1f}°")
+        print(f"  Median: {np.median(valid_incidence_angles):.1f}°")
+
+        passing_inc = sum(1 for v in valid_incidence_angles if v <= 30.0)
+        print(f"  Passing QC (≤30°): {passing_inc}/{len(valid_incidence_angles)} ({100*passing_inc/len(valid_incidence_angles):.1f}%)")
+
+    return organized_waveforms
+
+
+def calculate_rectilinearity(trace_z, trace_n, trace_e, p_arrival_offset=4.0,
                                  analysis_window=1.0):
     """
     Analyze P-wave rectilinearity using covariance matrix analysis.

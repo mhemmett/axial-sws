@@ -1,0 +1,54 @@
+Logging file for Shear Wave Splitting
+Starting Loop over nlloc catalogs
+Processing catalog: ./SWS_nlloc/split_001.nlloc
+Processing catalog: ./SWS_nlloc/split_001.nlloc
+Processing 0 event
+Processing station AXCC1
+Check id existence
+time spent 0.000014 s
+Get Waveform
+time spent for waveform       0.362658 s
+az= 50.29, inc= 13.26, rec= 0.89
+SNR S: 5.308680
+Process Lambda
+Processing station AXEC1
+Check id existence
+time spent 0.000012 s
+Get Waveform
+time spent for waveform       0.537637 s
+az= 48.45, inc= 3.02, rec= 0.99
+SNR S: 5.980470
+Process Lambda
+Processing station AXEC2
+Check id existence
+time spent 0.000014 s
+Get Waveform
+time spent for waveform       0.600851 s
+az= 287.99, inc= 9.26, rec= 0.98
+SNR S: 3.910681
+Process Lambda
+Processing station AXEC3
+Check id existence
+time spent 0.000021 s
+Get Waveform
+time spent for waveform       0.529350 s
+az= 130.84, inc= 16.57, rec= 0.89
+SNR S: 5.873415
+Process Lambda
+Processing station AXAS1
+Check id existence
+time spent 0.000016 s
+Get Waveform
+time spent for waveform       0.413866 s
+az= 98.35, inc= 24.49, rec= 0.89
+SNR S: 1.423982
+s_snr is 1.423982 < 2.000000 threshold, skip observation
+Processing station AXAS2
+Check id existence
+time spent 0.000016 s
+Get Waveform
+time spent for waveform       0.517645 s
+az= 194.35, inc= 4.93, rec= 0.95
+SNR S: 3.386959
+Process Lambda
+Processing catalog: ./SWS_nlloc/split_002.nlloc

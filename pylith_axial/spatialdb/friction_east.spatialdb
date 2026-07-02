@@ -1,0 +1,16 @@
+#SPATIAL.ascii 1
+SimpleDB {
+  num-values = 4
+  value-names =  static_coefficient  dynamic_coefficient  slip_weakening_parameter  cohesion
+  value-units =  none                none                 m                         Pa
+  num-locs = 1
+  data-dim = 0
+  space-dim = 3
+  cs-data = cartesian {
+    to-meters = 1.0e+3
+    space-dim = 3
+  }
+}
+// Static μ=0.6, dynamic μ=0.4 (Byerlee 1978), D_c=0.01 m, C=0 (no cohesion)
+// Effective normal stress modified by pore pressure in run_sweep.py via initial_traction
+0.0  0.0  0.0   0.6  0.4  0.01  0.0

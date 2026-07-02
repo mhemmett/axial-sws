@@ -1,0 +1,37 @@
+# Data, caches, and generated results (see README/CLAUDE.md — never source-controlled)
+data/
+pickles/
+results/
+*.mseed
+*.pickle
+*.pkl
+*.mat
+
+# Figures / generated plots (any location in the repo)
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.gif
+
+# PyLith generated output (not source)
+pylith_axial/output/
+pylith_axial/scenarios/
+pylith_axial/mesh/*.msh
+pylith_axial/figures/
+
+# Catalog / waveform caches and stray outputs living directly in scripts/
+scripts/*.csv
+scripts/*.log
+
+# Python / Jupyter cruft
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+
+# Vendored package build artifacts
+swspy/docs/build/
+
+# OS cruft
+.DS_Store

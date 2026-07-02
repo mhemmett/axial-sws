@@ -1,0 +1,53 @@
+# Requirements for Axial Seamount Shear-Wave Splitting Analysis
+# Active workflow: per-station MLdd notebooks (Wang catalog, modified SWSPy),
+# NonLinLoc cross-validation notebooks (Wilcock/Baillard catalog), and the
+# pylith_axial/ Python-side (non-PyLith) orchestration/visualization scripts.
+#
+# Installed into the "seismo" conda environment — see env.sh.
+# Install with:  bash env.sh
+# or manually:   conda activate seismo && pip install -r requirements.txt
+
+# Core scientific computing
+numpy>=1.20.0
+scipy>=1.8.0
+pandas>=1.3.0
+matplotlib>=3.5.0
+
+# Seismology
+obspy>=1.4.0
+
+# Multitaper spectra (replaces deprecated mtspec; used for dominant-period estimation)
+multitaper>=1.1.0
+
+# Geodesy / projections (used by the Baillard-derived modules: GMT.py, projection.py)
+pyproj>=3.0.0
+utm>=0.7.0
+
+# Mapping (scripts/map_sws_spatial.py)
+cartopy>=0.22.0
+
+# Clustering
+scikit-learn>=1.0.0
+
+# PDF concatenation in util.py (Baillard module)
+PyPDF2>=2.0.0
+
+# Progress bars
+tqdm>=4.60.0
+
+# Jupyter
+jupyter>=1.0.0
+ipykernel>=6.0.0
+notebook>=6.4.0
+
+# HDF5 I/O and 3D visualization for pylith_axial/scripts (run_sweep.py,
+# plot_stress_3d.py, visualize_sweep.py) — reads/plots PyLith's .h5 output.
+# Note: this is the shared conda env for the Python-side scripts only; the
+# PyLith solver itself (incl. gmsh for mesh generation) runs in its own
+# separate install activated via pylith_axial/activate_pylith.sh.
+h5py>=3.8.0
+pyvista>=0.40.0
+
+# Note: swspy is NOT installed from PyPI. The repo vendors a modified copy in
+# swspy/ that fixes upstream's clustering to match MFAST/Teanby (2004).
+# Notebooks load it via:   sys.path.insert(0, 'swspy'); import swspy

@@ -1,0 +1,69 @@
+// Depth-dependent poroelastic properties for Axial Seamount.
+//
+// Two layers (split at z = 0.0 km, i.e. 100 m below the seafloor which is at
+// z = +0.1 km):
+//   Upper edifice (z in [0.0, 0.1] km, top 100 m): highly fractured young
+//     seafloor — high porosity, high Biot coefficient, high permeability.
+//   MORB crust (z < 0.0 km): mid-ocean ridge basalt — low porosity, lower
+//     Biot coefficient, low permeability.
+//
+// Shared (both layers, user-specified / derived from existing elastic model):
+//   solid_density        = 2900 kg/m^3
+//   shear_modulus        = 30 GPa  (mu = rho * Vs^2)
+//   drained_bulk_modulus = 50 GPa  (K_drained derived from Vp/Vs)
+//   fluid_density        = 1050 kg/m^3  (seawater / hydrothermal)
+//   fluid_viscosity      = 1e-3 Pa*s
+//   fluid_bulk_modulus   = 2.25 GPa
+//
+// Layer-specific:
+//                       porosity   biot_coefficient   isotropic_permeability
+//   Upper edifice        0.265        0.6                1e-12 m^2
+//   MORB crust           0.05         0.4                1e-15 m^2
+//
+// biot_modulus is NOT specified here: PyLith derives it internally from
+// porosity, biot_coefficient, fluid_bulk_modulus, drained_bulk_modulus.
+//
+// NOTE on coordinate scaling: coordinates are in km (to-meters = 1.0e+3).
+// This matches the mesh, which PyLith reads in km. The known 1000x stress
+// inflation issue is handled downstream by the visualization scripts (/1000);
+// do NOT change that behavior here.
+#SPATIAL_GRID.ascii 1
+SimpleGridDB {
+  num-x = 1
+  num-y = 1
+  num-z = 3
+  num-values = 9
+  value-names =  solid_density  fluid_density  fluid_viscosity  porosity  shear_modulus  drained_bulk_modulus  biot_coefficient  fluid_bulk_modulus  isotropic_permeability
+  value-units =  kg/m**3        kg/m**3        Pa*s             none      Pa             Pa                    none              Pa                  m**2
+  space-dim = 3
+  cs-data = cartesian {
+    to-meters = 1.0e+3   // coordinates in km
+    space-dim = 3
+  }
+} // SimpleGridDB
+
+// x coordinate (km) — uniform in x
+0.0
+
+// y coordinate (km) — uniform in y
+0.0
+
+// z coordinate (km), descending. Layer boundary at z = 0.0 km.
+// z = 0.05 km  -> mid upper edifice (above boundary)
+// z = 0.0  km  -> boundary node, assigned UPPER-layer properties
+// z = -10.0 km -> base of MORB crust
+0.05  0.0  -10.0
+
+// Columns are
+// (1) x (km)  (2) y (km)  (3) z (km)
+// (4) solid_density  (5) fluid_density  (6) fluid_viscosity  (7) porosity
+// (8) shear_modulus  (9) drained_bulk_modulus  (10) biot_coefficient
+// (11) fluid_bulk_modulus  (12) isotropic_permeability
+//
+// Upper edifice (z = 0.05 km)
+0.0  0.0   0.05   2900.0  1050.0  1.0e-3  0.265  3.0e10  5.0e10  0.6  2.25e9  1.0e-12
+// Boundary node (z = 0.0 km) — UPPER-layer values so the top 100 m is fully
+// the fractured edifice; nearest-neighbour below this depth picks up MORB.
+0.0  0.0   0.0    2900.0  1050.0  1.0e-3  0.265  3.0e10  5.0e10  0.6  2.25e9  1.0e-12
+// MORB crust (z = -10.0 km)
+0.0  0.0  -10.0   2900.0  1050.0  1.0e-3  0.05   3.0e10  5.0e10  0.4  2.25e9  1.0e-15

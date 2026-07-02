@@ -97,7 +97,7 @@ Applied uniformly before splitting:
 ## Repository Layout
 
 ```
-axial-splitting-ml/
+axial-sws/
 ├── README.md                      # this file
 ├── env.sh                         # one-shot environment setup
 ├── requirements.txt               # pip dependencies
@@ -125,6 +125,19 @@ Core analysis library:
 Baillard-derived modules (still imported by the active workflow):
 - `sws_methods.py`, `shearwavesplit.py`, `plotwaveform.py`, `GMT.py`, `projection.py`, `util.py`, `sws_vertices.py`.
 
+Forward-modeling / ray tracing (crack-model side of the pipeline):
+- `hudson_crack_model.py` — Hudson effective-medium theory for randomly-oriented, fluid-saturated penny cracks; stress tensor in, effective stiffness + predicted φ/δt out.
+- `sws_forward_model.py` — MCMC forward model predicting splitting at OBS stations from analytic Mogi/dike stress, using `hudson_crack_model.py`.
+- `sws_raytraced_dt.py`, `pykonal_raytracer.py` — ray tracing (pseudo-bending and eikonal) through the Baillard 3D S-velocity model.
+- `baillard_velocity.py`, `baillard_simple_model.py`, `baillard_kidiwela_model.py` — 3D S-velocity grid interpolation and simpler Mogi/Yang-source stress-to-splitting proxy models.
+
+Production plotting / post-processing (consume `results/` CSVs, one script per figure family):
+- `rose_plots_temporal.py`, `rose_plots_ultra_strict.py`, `rose_plots_strict_filter.py`, `rose_plots_baz.py`.
+- `sws_temporal_*.py`, `sws_tomography_*.py`, `sws_histograms*.py`, `sws_mesh_*.py`, `sws_source_accumulated.py`, `sws_strict_filter_annual.py`, `sws_phi15_filter_plots.py`, `sws_gif_*.py`, `mogi_*.py`, `compute_pgv_*.py`, `plot_pgv_*.py`, `dt_norm_temporal.py`, `cosine_similarity_heatmap.py`, `temporal_histograms.py`, `map_sws_spatial.py`, `seismicity_map.py`, `visualization.py`, `funcs.py`.
+
+Batch execution helpers:
+- `run_ax*_notebook.sh`, `run_axec3_worker*.sh`, `run_axec3_single.sh` — retry-loop wrappers that run the corresponding `_batched.py` script under the `seismo` conda env; `memory_monitor.sh` watches system memory during long runs.
+
 ### Active notebooks in `scripts/`
 
 Per-station MLdd processing (production):
@@ -146,6 +159,9 @@ Plotting and catalog prep:
 - All of Christian Baillard's plotting/figure framework: `scripts/ARTICLE_*.py`, `scripts/POSTER_*.py`, `scripts/test_*.py`, `scripts/untitled*.py`. These are kept on disk for reference but are not part of the active workflow.
 - Orphan utilities (`build_cmap.py`, `check_*`, `clean_*`, `concatenate_*`, etc.) and superseded notebooks (`master_shear_wave_splitting_workflow.ipynb`, the `notebooks/` folder, etc.).
 - All data, results, pickles, waveforms (`*.mseed`), and figures (`*.png/pdf/jpg`) — see `.gitignore`.
+- `swspy/` itself — present on disk (clone/copy it separately per [Prerequisites](#prerequisites)) but not committed here.
+- The 2022–2026 North Rift Zone real-time-extension scripts (`*_RT_batched.py`, `run_*_RT_notebook.sh`, `build_catalog_2022_2026.py`) — out of scope for this paper's decadal six-OBS dataset (see [Data](#data)); these belong to the future North Rift Zone follow-on work.
+- A couple of notebooks with large embedded-output JSON (`axial_splitting_mldd_AXEC1_batched.ipynb`, `axial_splitting_mldd_AXEC2_batched.ipynb`, `nonlinloc_apr_14_jun_01_plots.ipynb`) and two not-yet-classified notebooks (`fix_density_plots.ipynb`, `station_tilt.ipynb`).
 
 ## Getting Started
 
@@ -165,8 +181,8 @@ Plotting and catalog prep:
 
 ### Setup
 ```bash
-git clone https://github.com/mhemmett/axial-splitting-ml.git
-cd axial-splitting-ml
+git clone https://github.com/mhemmett/axial-sws.git
+cd axial-sws
 bash env.sh
 ```
 

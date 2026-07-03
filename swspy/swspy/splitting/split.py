@@ -1218,12 +1218,16 @@ class create_splitting_object:
         return phis, lags, phi_errs, lag_errs, min_eig_ratios
 
 
-    def _sws_win_clustering(self, lags, phis, lag_errs, phi_errs, min_eig_ratios=None, method="dbscan", return_clusters_data=False):
-        """Function to perform sws clustering of phis and lags. This clustering is based on the method of 
-        Teanby2004, except that this function uses new coordinate system to deal with the cyclic nature  
-        of phi about -90,90, and therefore uses a different clustering algorithm (dbscan) to perform 
+    def _sws_win_clustering(self, lags, phis, lag_errs, phi_errs, min_eig_ratios=None, method="dbscan", return_clusters_data=False,
+                             eps=0.15, min_samples=15):
+        """Function to perform sws clustering of phis and lags. This clustering is based on the method of
+        Teanby2004, except that this function uses new coordinate system to deal with the cyclic nature
+        of phi about -90,90, and therefore uses a different clustering algorithm (dbscan) to perform
         optimal clustering within this new space.
         Note: Performs analysis on normallised lag data.
+
+        eps, min_samples : DBSCAN parameters, exposed for parameter sweeps. Default (0.15, 15)
+        matches the values a prior parameter sweep over events found reasonable (see below).
         """
         # Do initial check on lags to make sure not exactly zero (as coord. transform doesn't work):
         if np.max(lags) == 0.:
@@ -1231,7 +1235,7 @@ class create_splitting_object:
 
         # Weight samples by their error variances:
         # samples_weights = 1. - ((lag_errs/lags)**2 + (phi_errs/phis)**2) # (= 1 - (var_lag_norm + var_phi_norm))
-        
+
         # Convert phis and lags into new coordinate system:
         samples_new_coords =  np.dstack(( ( lags / np.max(lags) ) * np.cos(2 * np.deg2rad(phis)), ( lags / np.max(lags) ) * np.sin(2 * np.deg2rad(phis)) ))[0,:,:]
 
@@ -1252,7 +1256,7 @@ class create_splitting_object:
         # ward = AgglomerativeClustering(n_clusters=None, linkage='ward',distance_threshold=0.25)
         # ward.fit(samples_new_coords)#, sample_weight=samples_weights)
         #db = DBSCAN(eps=0.25, min_samples=int(np.sqrt(len(lags))))
-        db = DBSCAN(eps=0.15, min_samples=15) # Parameter sweep over events suggests these values (0.15, 15) given a reasonable number of clusters that are still tight enough to be meaningful, for 2-1σ, 1.8-2.2 Tmid
+        db = DBSCAN(eps=eps, min_samples=min_samples) # Defaults (0.15, 15): parameter sweep over events suggests these values given a reasonable number of clusters that are still tight enough to be meaningful, for 2-1σ, 1.8-2.2 Tmid
         clustering = db.fit(samples_new_coords)#, sample_weight=samples_weights)
         # Separate samples into clusters:
         n_clusters = len(set(clustering.labels_)) - (1 if -1 in clustering.labels_ else 0) # Note: -1 are noise coords
@@ -1497,7 +1501,8 @@ class create_splitting_object:
         return st_ZNE_curr, st_ZNE_curr_sws_corrected_layer_2, st_ZNE_curr_sws_corrected_layer_1_and_2
     
 
-    def perform_sws_analysis(self, coord_system="ZNE", sws_method="EV", return_clusters_data=True, num_threads=numba.config.NUMBA_DEFAULT_NUM_THREADS):
+    def perform_sws_analysis(self, coord_system="ZNE", sws_method="EV", return_clusters_data=True, num_threads=numba.config.NUMBA_DEFAULT_NUM_THREADS,
+                              cluster_eps=0.15, cluster_min_samples=15):
         """Function to perform splitting analysis. Works in LQT coordinate system 
         as then performs shear-wave-splitting in 3D.
         
@@ -1522,6 +1527,13 @@ class create_splitting_object:
             Number of threads to use for parallel computing. Default is to use all 
             available threads on the system.
 
+        cluster_eps : float
+            DBSCAN eps parameter for the single-layer window clustering (_sws_win_clustering).
+            Default 0.15.
+
+        cluster_min_samples : int
+            DBSCAN min_samples parameter for the single-layer window clustering. Default 15.
+
         Returns
         -------
         self.sws_result_df : pandas DataFrame
@@ -1531,6 +1543,8 @@ class create_splitting_object:
         # Save any parameters to class object:
         self.coord_system = coord_system
         self.sws_method = sws_method
+        self.cluster_eps = cluster_eps
+        self.cluster_min_samples = cluster_min_samples
         
         # Perform initial parameter checks:
         if ( sws_method != "EV" ) and ( sws_method != "EV_and_XC" ):
@@ -1640,9 +1654,9 @@ class create_splitting_object:
             # 6. Perform clustering for all windows to find best result:
             # (Teanby2004 method, but in new coordinate space with dbscan clustering)
             if return_clusters_data:
-                opt_phi, opt_lag, opt_phi_err, opt_lag_err, opt_eig_ratio, clusters_dict, min_var_idx, opt_obs_global_idx = self._sws_win_clustering(lags, phis, lag_errs, phi_errs, min_eig_ratios=min_eig_ratios, method="dbscan", return_clusters_data=True)
+                opt_phi, opt_lag, opt_phi_err, opt_lag_err, opt_eig_ratio, clusters_dict, min_var_idx, opt_obs_global_idx = self._sws_win_clustering(lags, phis, lag_errs, phi_errs, min_eig_ratios=min_eig_ratios, method="dbscan", return_clusters_data=True, eps=self.cluster_eps, min_samples=self.cluster_min_samples)
             else:
-                opt_phi, opt_lag, opt_phi_err, opt_lag_err, opt_eig_ratio, opt_obs_global_idx = self._sws_win_clustering(lags, phis, lag_errs, phi_errs, min_eig_ratios=min_eig_ratios, method="dbscan")
+                opt_phi, opt_lag, opt_phi_err, opt_lag_err, opt_eig_ratio, opt_obs_global_idx = self._sws_win_clustering(lags, phis, lag_errs, phi_errs, min_eig_ratios=min_eig_ratios, method="dbscan", eps=self.cluster_eps, min_samples=self.cluster_min_samples)
             # And check that clustered:
             if not opt_phi:
                 # If didn't cluster, skip station:

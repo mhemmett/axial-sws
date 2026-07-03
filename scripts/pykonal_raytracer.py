@@ -187,6 +187,25 @@ class BaillardRayTracer:
         t_new = np.linspace(0, d[-1], n_pts)
         return np.column_stack([np.interp(t_new, d, ray[:, k]) for k in range(3)])
 
+    def incidence_angle_at_station(self, sta_name: str,
+                                    eq_x: float, eq_y: float, eq_z: float) -> float:
+        """
+        S-wave incidence angle (degrees, 0-90, 0=vertical) of the FMM-traced ray's final
+        segment arriving at the station, given a station already precomputed via
+        precompute_station(). Returns NaN if trace() fails rather than raising, since a
+        single event's failed trace shouldn't abort a batch loop.
+        """
+        try:
+            ray = self.trace(sta_name, eq_x, eq_y, eq_z)
+        except (RuntimeError, KeyError):
+            return float('nan')
+
+        dx = ray[-1, 0] - ray[-2, 0]
+        dy = ray[-1, 1] - ray[-2, 1]
+        dz = ray[-1, 2] - ray[-2, 2]
+        horizontal = np.sqrt(dx ** 2 + dy ** 2)
+        return float(np.degrees(np.arctan2(horizontal, np.abs(dz))))
+
     def ray_to_voxels(self, ray: np.ndarray,
                        xn: np.ndarray, yn: np.ndarray, zn: np.ndarray
                        ) -> Tuple[np.ndarray, np.ndarray]:

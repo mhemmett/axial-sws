@@ -23,14 +23,10 @@ The long-term arc is to start just before the April 2015 eruption and run throug
 
 ### Stations
 Five caldera-floor stations carry the analysis through the eruption window:
-- **AXAS1, AXAS2** (south caldera flank)
-- **AXEC1, AXEC2, AXEC3** (eastern caldera floor)
+- **AXAS1, AXAS2** (western caldera wall - ASHES vent field)
+- **AXEC1, AXEC2, AXEC3** (eastern caldera wall)
 
-**AXCC1** (central caldera) tipped over in March 2015 due to caldera volumetric inflation and is treated separately — it will be folded back in once orientation/tilt corrections are settled.
-
-Future additions:
-- **AXID1** for completeness of the cabled array
-- **2022–2026 RT-catalog extension**: the same 6 caldera stations, real-time (RT) MLdd catalog variant — not a new/different OBS deployment. Per-station `*_RT_batched.py` scripts and `build_catalog_2022_2026.py` already exist (see [Active code](#active-code-in-scripts)) but have not yet been run to completion.
+**AXCC1** (central caldera) tipped over in March 2015 due to caldera volumetric inflation, but is reset after the eruption onset. This portion of data is excluded, but otherwise the station has good coupling and is included in the analysis.
 
 ### Earthquake catalogs
 

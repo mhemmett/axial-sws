@@ -1,20 +1,20 @@
 """
-7-panel (eruption-relative) and annual rose plots for the AXEC2 LQT + PyKonal-FMM
-production run, following the exact style/conventions of rose_plots_temporal.py's
-splitting_*.pdf figures (same period definitions, same doubled-angle %180 rose drawing,
-same color scheme) - just scoped to a single station instead of the 6-station grid, since
-rose_plots_temporal.py's make_rose_figure is tightly coupled to its 6-station STATION_ORDER
-and isn't safely importable (it executes its whole pipeline at import time against a stale
-hardcoded path).
+Q_w-filtered variant of build_production_rose_plots_axec2.py: same 7-panel
+(eruption-relative) and annual rose plots for the AXEC2 LQT + PyKonal-FMM
+production run, but restricted to "good" measurements only:
+    quality (Q_w, Wustefeld 2010) >= 0.5
+    phi_error < 20 deg
+    dt_error  < 0.04 s
 
-Produces, matching rose_plots_temporal.py's naming convention:
-    axec2_splitting_weighted.pdf            - 7-panel, weighted by |dt|
-    axec2_splitting_unweighted.pdf          - 7-panel, count-weighted
-    axec2_splitting_weighted_annual.pdf     - annual bins, weighted by |dt|
-    axec2_splitting_unweighted_annual.pdf   - annual bins, count-weighted
+Produces, with a distinct naming convention from the unfiltered version so
+neither overwrites the other:
+    axec2_splitting_lqt_pykonal_final_qw05_weighted.pdf
+    axec2_splitting_lqt_pykonal_final_qw05_unweighted.pdf
+    axec2_splitting_lqt_pykonal_final_qw05_weighted_annual.pdf
+    axec2_splitting_lqt_pykonal_final_qw05_unweighted_annual.pdf
 
 Run with:
-    python3 build_production_rose_plots_axec2.py
+    python3 build_production_rose_plots_axec2_qw05.py
 """
 
 import glob
@@ -29,10 +29,13 @@ import matplotlib.colors as mcolors
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RESULTS_DIR = os.path.join(HERE, 'production_axec2_lqt_pykonal_results')
-RAW_METADATA_CSV = os.path.join(HERE, 'raw_axec2_all_batches_data', 'raw_axec2_all_batches_metadata.csv')
 
 STATION = 'AXEC2'
 NBINS = 36
+
+QW_MIN = 0.5
+PHI_ERR_MAX = 20.0
+DT_ERR_MAX = 0.04
 
 # Same eruption timing as rose_plots_temporal.py
 ERUPTION_START = pd.Timestamp('2015-04-24 06:00', tz='UTC')
@@ -40,13 +43,17 @@ ERUPTION_END = pd.Timestamp('2015-05-19 00:00', tz='UTC')
 
 
 def load_combined_results():
-    """Combine all per-batch production results with the raw metadata (for datetime/lat/lon)."""
+    """Combine all per-batch production results, filtered to good-quality measurements."""
     result_files = glob.glob(os.path.join(RESULTS_DIR, 'splitting_results_mldd_2015_2021_axec2_batch_*.csv'))
     dfs = [pd.read_csv(f) for f in result_files]
     dfs = [d for d in dfs if len(d) > 0]
     results = pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
     results = results[results['success'] == True].copy()
     results = results[results['dt'] > 0]  # remove null measurements, matching _load_station convention
+    results = results.dropna(subset=['quality', 'phi_error', 'dt_error'])
+    results = results[(results['quality'] >= QW_MIN) &
+                       (results['phi_error'] < PHI_ERR_MAX) &
+                       (results['dt_error'] < DT_ERR_MAX)]
     results['t'] = pd.to_datetime(results['datetime'], utc=True)
     results['phi_az'] = results['phi'] % 180.0
     return results
@@ -180,9 +187,10 @@ def make_single_station_figure(df, time_periods, dt_weighted, title):
 
 
 def main():
-    print("Loading combined production results...")
+    print(f"Loading combined production results (Q_w >= {QW_MIN}, "
+          f"phi_error < {PHI_ERR_MAX} deg, dt_error < {DT_ERR_MAX} s)...")
     df = load_combined_results()
-    print(f"Total successful, non-null splitting measurements: {len(df)}")
+    print(f"Total good-quality splitting measurements: {len(df)}")
 
     weight_label = {True: 'weighted', False: 'unweighted'}
 
@@ -192,9 +200,9 @@ def main():
         time_periods = _build_time_periods(df)
         fig = make_single_station_figure(
             df, time_periods, dt_weighted,
-            f"{STATION} — LQT + PyKonal-FMM incidence (35° cut) — {wlabel}"
+            f"{STATION} — LQT + PyKonal-FMM incidence (35° cut), Q$_w\\geq${QW_MIN} — {wlabel}"
         )
-        out_path = os.path.join(HERE, f'axec2_splitting_lqt_pykonal_final_{wlabel}.pdf')
+        out_path = os.path.join(HERE, f'axec2_splitting_lqt_pykonal_final_qw05_{wlabel}.pdf')
         fig.savefig(out_path, dpi=200, bbox_inches='tight')
         plt.close(fig)
         print(f"Saved {out_path}")
@@ -202,9 +210,9 @@ def main():
         annual_periods = _build_annual_periods()
         fig = make_single_station_figure(
             df, annual_periods, dt_weighted,
-            f"{STATION} — LQT + PyKonal-FMM incidence (35° cut) — annual, {wlabel}"
+            f"{STATION} — LQT + PyKonal-FMM incidence (35° cut), Q$_w\\geq${QW_MIN} — annual, {wlabel}"
         )
-        out_path = os.path.join(HERE, f'axec2_splitting_lqt_pykonal_final_{wlabel}_annual.pdf')
+        out_path = os.path.join(HERE, f'axec2_splitting_lqt_pykonal_final_qw05_{wlabel}_annual.pdf')
         fig.savefig(out_path, dpi=200, bbox_inches='tight')
         plt.close(fig)
         print(f"Saved {out_path}")

@@ -27,8 +27,9 @@ scripts/**/*.csv
 scripts/**/*.log*
 scripts/**/.done_batches/
 
-# DMODELS deformation-model input/output grids (large binary-ish data, not source)
-*.xyzuvw
+# DMODELS deformation-model inputs/outputs (data, incl. the MATLAB generator scripts
+# themselves - not part of the tracked analysis pipeline)
+Axial_Deformation/
 
 # Python / Jupyter cruft
 __pycache__/

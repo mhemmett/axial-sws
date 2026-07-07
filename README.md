@@ -6,7 +6,7 @@ Shear-wave splitting analysis of local seismicity at Axial Seamount on the Juan 
 
 Splitting parameters — fast polarization direction (φ) and delay time (δt) — measure the orientation and density of aligned cracks in the shear-wave window. Tracking how φ and δt change in space and time should constrain how the volcanic stress field reorganizes around eruptive episodes at submarine ridge volcanoes, and feeds into hazard / forecasting work on the Juan de Fuca Ridge.
 
-The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. As of this writing the analysis covers 2015–2021 from the OOI cabled array; future work extends it forward to today and adds the 2022–2024 North Rift Zone OBS deployment.
+The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. As of this writing the analysis covers 2015–2021 from the OOI cabled array; future work extends it forward to today using 2022–2026 data from the **same caldera OBS network** (not a new deployment), sourced from the real-time (RT) version of the MLdd earthquake catalog.
 
 ### Research Objectives
 - Track temporal changes in φ and δt across the 2015 eruption and the subsequent inflation cycle.
@@ -30,7 +30,7 @@ Five caldera-floor stations carry the analysis through the eruption window:
 
 Future additions:
 - **AXID1** for completeness of the cabled array
-- The 15-station 2022–2024 temporary OBS deployment along the **North Rift Zone**
+- **2022–2026 RT-catalog extension**: the same 6 caldera stations, real-time (RT) MLdd catalog variant — not a new/different OBS deployment. Per-station `*_RT_batched.py` scripts and `build_catalog_2022_2026.py` already exist (see [Active code](#active-code-in-scripts)) but have not yet been run to completion.
 
 ### Earthquake catalogs
 
@@ -164,6 +164,12 @@ Deformation modeling (DMODELS comparison, `Axial_Deformation/`):
 Batch execution helpers:
 - `run_ax*_notebook.sh`, `run_axec3_worker*.sh`, `run_axec3_single.sh` — retry-loop wrappers that run the corresponding `_batched.py` script under the `seismo` conda env; `memory_monitor.sh` watches system memory during long runs.
 
+2022–2026 RT-catalog extension (same 6 caldera stations as the main analysis, **not** a new/different OBS deployment - "RT" refers to the real-time version of the MLdd earthquake catalog these events were originally sourced from):
+- `axial_splitting_mldd_AX*_RT_batched.py` — per-station batched splitting runs against the RT catalog.
+- `build_catalog_2022_2026.py` — builds the 2022–2026 RT catalog into this workflow's input format.
+- `run_ax*_RT_notebook.sh` — retry-loop wrappers for the RT batched scripts, mirroring the main batch execution helpers above.
+- Not yet run to completion; not part of the current decadal (2015–2021) production results.
+
 ### Active notebooks in `scripts/`
 
 Per-station MLdd processing (production):
@@ -182,11 +188,9 @@ Plotting and catalog prep:
 
 ### Files kept locally but not tracked
 
-- All of Christian Baillard's plotting/figure framework: `scripts/ARTICLE_*.py`, `scripts/POSTER_*.py`, `scripts/test_*.py`, `scripts/untitled*.py`. These are kept on disk for reference but are not part of the active workflow.
+- Most of Christian Baillard's plotting/figure framework: `scripts/ARTICLE_*.py`, `scripts/POSTER_*.py`, `scripts/test_*.py`, `scripts/untitled*.py`. Kept on disk for reference but not part of the active workflow, and confirmed not imported by anything that is. **Exception**: `ARTICLE_deformation.py`/`ARTICLE_deformation_util.py` are tracked — they're the source `deformation_util.py`/`deformation_analysis.py` were ported from (see [Deformation modeling](#deformation-modeling-dmodels-comparison)).
 - Orphan utilities (`build_cmap.py`, `check_*`, `clean_*`, `concatenate_*`, etc.) and superseded notebooks (`master_shear_wave_splitting_workflow.ipynb`, the `notebooks/` folder, etc.).
 - All data, results, pickles, waveforms (`*.mseed`), and figures (`*.png/pdf/jpg`) — see `.gitignore`.
-- `swspy/` itself — present on disk (clone/copy it separately per [Prerequisites](#prerequisites)) but not committed here.
-- The 2022–2026 North Rift Zone real-time-extension scripts (`*_RT_batched.py`, `run_*_RT_notebook.sh`, `build_catalog_2022_2026.py`) — out of scope for this paper's decadal six-OBS dataset (see [Data](#data)); these belong to the future North Rift Zone follow-on work.
 - A couple of notebooks with large embedded-output JSON (`axial_splitting_mldd_AXEC1_batched.ipynb`, `axial_splitting_mldd_AXEC2_batched.ipynb`, `nonlinloc_apr_14_jun_01_plots.ipynb`) and two not-yet-classified notebooks (`fix_density_plots.ipynb`, `station_tilt.ipynb`).
 
 ## Getting Started
@@ -263,7 +267,7 @@ results = perform_splitting_on_organized_waveforms(
 
 - **S-wave incidence angle / LQT rotation fix**: complete — see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation). `coord_system` parameter added throughout the pipeline; production now runs LQT + PyKonal-FMM incidence at a 35° cut.
 - **AXEC2 production run complete**: full 2015–2021 MLdd catalog, 497/497 batches, 88,649 successful LQT + PyKonal-FMM splitting measurements. Rose plots (7-panel + annual, all-data and `Q_w≥0.5` filtered) and a temporal histogram are built from this dataset — see `build_production_rose_plots_axec2*.py`, `axec2_temporal_histogram_lqt_pykonal.py`.
-- **Next**: re-run AXAS1, AXAS2, AXCC1, AXEC1, AXEC3 with the same LQT + PyKonal-FMM pipeline (currently only AXEC2 has been fully re-run; the deformation-modeling comparison below still uses the older P-Jurkevics-incidence per-station results for the other 5 stations as an interim measure), then fold AXCC1 in once tilt-corrected, then bring in the 2022–2024 North Rift Zone deployment.
+- **Next**: re-run AXAS1, AXAS2, AXCC1, AXEC1, AXEC3 with the same LQT + PyKonal-FMM pipeline (currently only AXEC2 has been fully re-run; the deformation-modeling comparison below still uses the older P-Jurkevics-incidence per-station results for the other 5 stations as an interim measure), then fold AXCC1 in once tilt-corrected, then complete the 2022–2026 RT-catalog extension (same caldera stations, real-time MLdd catalog variant - see [Data](#data)).
 - **Deformation modeling started**: DMODELS (Okada dike + Yang spheroid) forward-model comparison against observed φ/δt, both replicating Baillard's original 2019 comparison and a new version using this repo's own splitting results — see [Deformation modeling (DMODELS comparison)](#deformation-modeling-dmodels-comparison) below. AXID1 is excluded from the new version (not part of the production catalog); the exact DMODELS source parameters behind most of the individual `.xyzuvw` files are not recoverable from the current `axial_comb_V0.m`/`axial_dike_V0.m` (only the most recent scenario in each is preserved).
 - **Validation**: modified SWSPy and Baillard's single-window method agree to within ~5% on SNR, ≤1° on geometry, and consistent φ/δt across the NonLinLoc cross-check catalog.
 

@@ -814,11 +814,223 @@ def calculate_incidence_angle_eigenvalue_jurkevics_for_organized_waveforms(organ
         # Show how many pass typical QC threshold (e.g., < 30°)
         passing_inc = sum(1 for v in valid_incidence_angles if v <= 30.0)
         print(f"  Passing QC (≤30°): {passing_inc}/{len(valid_incidence_angles)} ({100*passing_inc/len(valid_incidence_angles):.1f}%)")
-    
+
     return organized_waveforms
 
 
-def calculate_rectilinearity(trace_z, trace_n, trace_e, p_arrival_offset=4.0, 
+def calculate_incidence_angle_eigenvalue_jurkevics_s(trace_z, trace_n, trace_e, s_arrival_offset,
+                                                       s_window_before=0.02, t_dom_freq_win=(0.1, 0.3)):
+    """
+    Calculate S-wave ray incidence angle using Jurkevics (1988)-style polarization analysis,
+    applied to the S-wave window instead of the P-wave window.
+
+    Physical basis: P-wave particle motion is longitudinal (along the ray), so the dominant
+    eigenvector's angle from vertical directly gives the ray incidence angle via arccos
+    (see calculate_incidence_angle_eigenvalue_jurkevics). S/SV particle motion is transverse
+    to the ray, i.e. rotated 90 degrees from the ray direction within the vertical (sagittal)
+    plane. If the ray incidence angle is theta, the SV polarization direction therefore makes
+    angle (90-theta) with vertical, so |eigvec1_Z| = sin(theta) rather than cos(theta) - hence
+    this function uses arcsin in place of the P-wave function's arccos.
+
+    Window: unlike the P-wave function's fixed 0.12s window (tuned for a short P pulse), the
+    S window here is scaled to each event's dominant period T_dom, since S has a longer
+    dominant period than P at the same event. T_dom is estimated with the exact same function
+    and window SWSPy itself uses for its own Tmid (swspy.splitting.get_dominant_period_baillard,
+    a scipy.signal.welch-based estimator on the E and N components in [S - t_dom_freq_win[0],
+    S + t_dom_freq_win[1]], default [S-0.1s, S+0.3s]) rather than the (broken in the current
+    ObsPy version) estimate_dominant_period/PPSD path used elsewhere in this module - this also
+    keeps the incidence-angle T_dom consistent with the T_dom actually driving the splitting
+    measurement's own window sizing. The incidence-angle window is then
+    [S_arrival - s_window_before, S_arrival + T_dom].
+
+    Reference: Jurkevics, A. (1988). Polarization analysis of three-component array data.
+
+    Parameters:
+    -----------
+    trace_z, trace_n, trace_e : obspy.Trace
+        Vertical (Z-up), North, and East component traces
+    s_arrival_offset : obspy.UTCDateTime
+        Absolute time of the S-arrival
+    s_window_before : float
+        Time before S-arrival to start window (seconds), default=0.02s
+    t_dom_freq_win : tuple(float, float)
+        (before, after) window around the S arrival used to estimate T_dom, default (0.1, 0.3),
+        matching swspy.splitting.split.create_splitting_object's own Tmid calculation.
+
+    Returns:
+    --------
+    float
+        Incidence angle in degrees (0-90°), where 0° is vertical incidence. Returns NaN on
+        any failure (missing data, degenerate window, etc.) rather than raising, matching the
+        P-wave function's error-handling convention.
+
+    Note:
+    -----
+    Z-axis convention: Positive upward (standard seismological convention).
+    The eigenvector is flipped to point downward if needed, exactly as in the P-wave version,
+    before the arcsin is taken.
+    """
+    try:
+        # Estimate T_dom exactly as swspy does for Tmid: get_dominant_period_baillard (welch)
+        # on the E and N components in [S-0.1s, S+0.3s] by default, averaged, converted from
+        # samples to seconds via the trace's own sampling rate.
+        t_dom_start = s_arrival_offset - t_dom_freq_win[0]
+        t_dom_end = s_arrival_offset + t_dom_freq_win[1]
+        trace_n_tdom = trace_n.slice(t_dom_start, t_dom_end)
+        trace_e_tdom = trace_e.slice(t_dom_start, t_dom_end)
+        fs = trace_n.stats.sampling_rate
+
+        if len(trace_n_tdom.data) > 10 and len(trace_e_tdom.data) > 10:
+            (dom_period_n_samples, _) = swspy.splitting.get_dominant_period_baillard(trace_n_tdom.data, fs=fs)
+            (dom_period_e_samples, _) = swspy.splitting.get_dominant_period_baillard(trace_e_tdom.data, fs=fs)
+            t_dom = np.mean([dom_period_n_samples, dom_period_e_samples]) / fs
+        else:
+            t_dom = 0.1  # Same fallback convention as swspy/calculate_dynamic_parameters
+
+        window_start = s_arrival_offset - s_window_before
+        window_end = s_arrival_offset + t_dom
+
+        z_data = trace_z.slice(window_start, window_end).data
+        n_data = trace_n.slice(window_start, window_end).data
+        e_data = trace_e.slice(window_start, window_end).data
+
+        # Construct data matrix (N_samples x 3) with Z, N, E columns (Z upward)
+        data_zne = np.column_stack([z_data, n_data, e_data])
+
+        # Eigenvalue decomposition using Jurkevics method
+        eigvals, eigvecs = cov_eig(data_zne)
+        eigvec1 = eigvecs[:, 0]
+
+        # Make sure the eigenvector points towards the ground (-Z)
+        if eigvec1[0] >= 0:
+            eigvec1 = -eigvec1
+
+        # S/SV polarization is transverse to the ray: |eigvec1_Z| = sin(incidence), not cos.
+        inc = np.arcsin(np.clip(np.abs(eigvec1[0]), 0.0, 1.0)) * 180 / np.pi
+
+        return inc
+
+    except Exception as e:
+        print(f"S-wave Jurkevics incidence angle calculation error: {e}")
+        return np.nan
+
+
+def calculate_incidence_angle_eigenvalue_jurkevics_s_for_organized_waveforms(organized_waveforms,
+                                                                              s_arrival_variable='s_arrival_time',
+                                                                              t_dom_freq_win=(0.1, 0.3)):
+    """
+    Calculate S-wave eigenvalue/polarization-based incidence angle (see
+    calculate_incidence_angle_eigenvalue_jurkevics_s) for all events in organized_waveforms.
+
+    Mirrors calculate_incidence_angle_eigenvalue_jurkevics_for_organized_waveforms in overall
+    structure, but windows on the S arrival (scaled per-event to T_dom, computed the same way
+    SWSPy computes its own Tmid, not a fixed duration) and stores results under a distinct
+    field name so the P-wave incidence remains available alongside it for comparison.
+
+    Parameters:
+    -----------
+    organized_waveforms : dict
+        Dictionary with event IDs as keys, containing event data, traces, and metadata
+    s_arrival_variable : str
+        Name of variable containing S-arrival time offset from trace start
+    t_dom_freq_win : tuple(float, float)
+        (before, after) window around the S arrival used to estimate T_dom, passed through to
+        calculate_incidence_angle_eigenvalue_jurkevics_s. Default (0.1, 0.3).
+
+    Returns:
+    --------
+    dict
+        Updated organized_waveforms with S-wave eigenvalue incidence angle values stored in
+        'incidence_eigenvalue_jurkevics_s' field
+    """
+
+    print(f"Calculating S-wave eigenvalue-based incidence angle for {len(organized_waveforms)} events...")
+    print(f"S-arrival variable: {s_arrival_variable}, window: [S-0.02s, S+T_dom] (T_dom estimated per event)")
+
+    success_count = 0
+
+    for event_id, event_data in organized_waveforms.items():
+        print(f"\nProcessing event {event_id}...")
+
+        datetime_utc = event_data.get('datetime')
+        s_arrival_relative = event_data.get(str(s_arrival_variable))
+
+        if datetime_utc is None or s_arrival_relative is None:
+            print(f"  Missing datetime or S-arrival time")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        s_arrival_offset = UTCDateTime(datetime_utc) + float(s_arrival_relative)
+
+        event_traces = event_data.get('traces', [])
+        if not event_traces:
+            print(f"  No traces found for event {event_id}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        if isinstance(event_traces, list):
+            event_stream = obspy.Stream(event_traces)
+        else:
+            event_stream = event_traces
+
+        trace_z = None
+        trace_n = None
+        trace_e = None
+
+        for tr in event_stream:
+            component = tr.stats.channel[-1].upper()
+            if component == 'Z':
+                trace_z = tr
+            elif component in ['N', '1']:
+                trace_n = tr
+            elif component in ['E', '2']:
+                trace_e = tr
+
+        if trace_z is None or trace_n is None or trace_e is None:
+            print(f"  Missing components: Z={trace_z is not None}, "
+                  f"N={trace_n is not None}, E={trace_e is not None}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+            continue
+
+        try:
+            incidence_angle = calculate_incidence_angle_eigenvalue_jurkevics_s(
+                trace_z, trace_n, trace_e,
+                s_arrival_offset=s_arrival_offset,
+                t_dom_freq_win=t_dom_freq_win
+            )
+
+            event_data['incidence_eigenvalue_jurkevics_s'] = incidence_angle
+
+            print(f"  S-wave eigenvalue incidence angle: {incidence_angle:.1f}°")
+
+            if not np.isnan(incidence_angle):
+                success_count += 1
+
+        except Exception as e:
+            print(f"  Error calculating S-wave eigenvalue incidence angle: {e}")
+            event_data['incidence_eigenvalue_jurkevics_s'] = np.nan
+
+    print(f"\n{'='*60}")
+    print("S-wave Eigenvalue Incidence Angle Calculation Complete")
+    print(f"{'='*60}")
+    print(f"Events with valid S-wave eigenvalue incidence angle: {success_count}/{len(organized_waveforms)}")
+
+    incidence_angle_values = [data.get('incidence_eigenvalue_jurkevics_s', np.nan) for data in organized_waveforms.values()]
+    valid_incidence_angles = [v for v in incidence_angle_values if not np.isnan(v)]
+
+    if valid_incidence_angles:
+        print(f"\nS-wave Eigenvalue Incidence Angle Statistics:")
+        print(f"  Range: {min(valid_incidence_angles):.1f}° to {max(valid_incidence_angles):.1f}°")
+        print(f"  Mean: {np.mean(valid_incidence_angles):.1f}°")
+        print(f"  Median: {np.median(valid_incidence_angles):.1f}°")
+
+        passing_inc = sum(1 for v in valid_incidence_angles if v <= 30.0)
+        print(f"  Passing QC (≤30°): {passing_inc}/{len(valid_incidence_angles)} ({100*passing_inc/len(valid_incidence_angles):.1f}%)")
+
+    return organized_waveforms
+
+
+def calculate_rectilinearity(trace_z, trace_n, trace_e, p_arrival_offset=4.0,
                                  analysis_window=1.0):
     """
     Analyze P-wave rectilinearity using covariance matrix analysis.
@@ -1218,14 +1430,16 @@ def calculate_rectilinearity_jurkevics_for_organized_waveforms(organized_wavefor
     
     return organized_waveforms
 
-def perform_splitting_analysis(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty, plot_results=False):
+def perform_splitting_analysis(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty,
+                                coord_system="LQT", sws_method="EV_and_XC", incidence_field="incidence_eigenvalue_jurkevics",
+                                cluster_eps=0.15, cluster_min_samples=15, plot_results=False):
     """
     Perform shear-wave splitting analysis using data from organized_waveforms.
-    
+
     This function now uses dynamic parameter calculation to optimize the analysis
     window and filtering based on the event's spectral characteristics. All required
     data (traces, timing, metadata) comes from event_data.
-    
+
     Parameters:
     -----------
     event_data : dict
@@ -1238,9 +1452,25 @@ def perform_splitting_analysis(event_data, first_window_start, last_window_start
         - datetime: Event origin time
         - magnitude: Event magnitude
         - All QC metrics (snr_horizontal, rectilinearity, etc.)
+    coord_system : str, optional
+        Rotation frame passed straight to swspy's splitting_obj.perform_sws_analysis
+        (coord_system=...) - "LQT" (ray-based, default) or "ZNE" (no rotation).
+    sws_method : str, optional
+        sws_method passed straight to perform_sws_analysis, default "EV_and_XC" (required
+        for Q_w to be computed).
+    incidence_field : str, optional
+        Which event_data field to use as the LQT rotation's inclination angle (only matters
+        when coord_system="LQT"; ignored for "ZNE"). Default "incidence_eigenvalue_jurkevics"
+        (P-wave, legacy default) - pass "incidence_eigenvalue_jurkevics_s" or
+        "incidence_pykonal_s" to use one of the S-wave incidence estimates instead.
+    cluster_eps : float, optional
+        DBSCAN eps parameter for swspy's window clustering, default 0.15 (swspy's own default).
+    cluster_min_samples : int, optional
+        DBSCAN min_samples parameter for swspy's window clustering, default 15 (swspy's own
+        default).
     plot_results : bool, optional
         Whether to generate diagnostic plots (default=True)
-    
+
     Returns:
     --------
     tuple
@@ -1248,24 +1478,25 @@ def perform_splitting_analysis(event_data, first_window_start, last_window_start
         - result_dict: Dict with splitting parameters and metadata
         - splitting_obj: SWSPy splitting object with sws_result_df and plots
     """
-    
+
     station_name = event_data.get('station', 'UNKNOWN')
-    
+
     try:
         print(f"  Creating SWSPy splitting object with MFAST-like windowing parameters...")
-        
+
         # Create the splitting analysis object using our helper function
         # This handles all the setup: filtering, windowing, parameter optimization
-        splitting_obj = create_splitting_analysis(event_data, first_window_start=first_window_start, last_window_start=last_window_start, 
-                                                  first_window_end=first_window_end, last_window_end=last_window_end, n_win=n_win, s_pick_uncertainty=s_pick_uncertainty)
-        
+        splitting_obj = create_splitting_analysis(event_data, first_window_start=first_window_start, last_window_start=last_window_start,
+                                                  first_window_end=first_window_end, last_window_end=last_window_end, n_win=n_win, s_pick_uncertainty=s_pick_uncertainty,
+                                                  incidence_field=incidence_field, coord_system=coord_system)
+
         # Get dominant period
         Tmid = splitting_obj.Tmid
 
         # Perform the actual splitting analysis
-        print(f"  Running SWSPy splitting measurement...")
-        #splitting_obj.perform_sws_analysis(coord_system="ZNE", sws_method="EV_and_XC")
-        splitting_obj.perform_sws_analysis(coord_system="LQT", sws_method="EV_and_XC")
+        print(f"  Running SWSPy splitting measurement (coord_system={coord_system}, cluster_eps={cluster_eps}, cluster_min_samples={cluster_min_samples})...")
+        splitting_obj.perform_sws_analysis(coord_system=coord_system, sws_method=sws_method,
+                                            cluster_eps=cluster_eps, cluster_min_samples=cluster_min_samples)
         
         # Extract results from sws_result_df DataFrame
         print(f"  Extracting results from sws_result_df...")
@@ -3753,14 +3984,16 @@ def apply_quality_control(organized_waveforms, qc_thresholds):
 
 
 def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty, mode='swspy',
+                                             coord_system="LQT", sws_method="EV_and_XC", incidence_field="incidence_eigenvalue_jurkevics",
+                                             cluster_eps=0.15, cluster_min_samples=15,
                                              plot_results=False):
     """
     Perform shear-wave splitting analysis on all events in organized_waveforms.
-    
+
     This function assumes organized_waveforms has been filtered by apply_quality_control()
     and contains only events that pass QC thresholds. It extracts horizontal components
     and performs splitting analysis using the back_azimuth for coordinate rotation.
-    
+
     Parameters:
     -----------
     organized_waveforms : dict
@@ -3769,7 +4002,20 @@ def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_s
 
     mode : str
         Splitting analysis method to use: 'swspy' or 'baillard' (default: 'swspy')
-        
+    coord_system : str, optional
+        Rotation frame for mode='swspy' - "LQT" (ray-based, default) or "ZNE" (no rotation).
+        Passed straight through to perform_splitting_analysis / swspy's perform_sws_analysis.
+    sws_method : str, optional
+        sws_method for mode='swspy', default "EV_and_XC" (required for Q_w to be computed).
+    incidence_field : str, optional
+        Which event_data field drives the LQT rotation's inclination angle when
+        coord_system="LQT" (mode='swspy' only); ignored for coord_system="ZNE". Default
+        "incidence_eigenvalue_jurkevics" (P-wave, legacy default).
+    cluster_eps : float, optional
+        DBSCAN eps for mode='swspy' window clustering, default 0.15 (swspy's own default).
+    cluster_min_samples : int, optional
+        DBSCAN min_samples for mode='swspy' window clustering, default 15 (swspy's own default).
+
     Returns:
     --------
     dict
@@ -3888,7 +4134,9 @@ def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_s
             elif mode=='swspy':
                 # Call SWSPy-like splitting function
                 splitting_result, splitting_obj = perform_splitting_analysis(
-                    event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty, plot_results=plot_results
+                    event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty,
+                    coord_system=coord_system, sws_method=sws_method, incidence_field=incidence_field,
+                    cluster_eps=cluster_eps, cluster_min_samples=cluster_min_samples, plot_results=plot_results
                 )
 
             elif mode=='teanby_baillard':
@@ -5752,13 +6000,14 @@ def calculate_dynamic_parameters(event_data, s_arrival_buffer=1.0):
             'center_frequency': 10.0
         }
     
-def create_splitting_analysis(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty):
+def create_splitting_analysis(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty,
+                               incidence_field="incidence_eigenvalue_jurkevics", coord_system="LQT"):
     """
     Create a SWSPy splitting object from organized_waveforms event data.
-    
-    All required data (traces, station, back_azimuth, incidence, s_arrival_time) is 
+
+    All required data (traces, station, back_azimuth, incidence, s_arrival_time) is
     contained in event_data from organized_waveforms.
-    
+
     Parameters:
     -----------
     event_data : dict
@@ -5769,72 +6018,93 @@ def create_splitting_analysis(event_data, first_window_start, last_window_start,
         - incidence_eigenvalue_jurkevics: P-wave incidence angle (degrees from vertical)
         - s_arrival_time: S-wave arrival time (seconds from origin)
         - datetime: Event origin time (UTCDateTime compatible string)
-    use_dynamic_params : bool, optional
-        Whether to calculate and use dynamic windowing/filtering parameters
-        based on spectral analysis (default=True)
-        
+    incidence_field : str, optional
+        Name of the event_data field to use as the LQT rotation's inclination angle.
+        Default "incidence_eigenvalue_jurkevics" (P-wave, legacy default) - pass
+        "incidence_eigenvalue_jurkevics_s" or "incidence_pykonal_s" to drive the rotation
+        with an S-wave-derived incidence estimate instead. Only used when coord_system="LQT".
+    coord_system : str, optional
+        "LQT" (default) or "ZNE". This determines what inclination angle is actually passed
+        to swspy.splitting.create_splitting_object's receiver_inc_angles_all_stations - "LQT"
+        uses incidence_field's value, "ZNE" passes 0.0 (vertical incidence, i.e. no rotation).
+        This has to be decided here, at object-construction time, rather than left to swspy's
+        own perform_sws_analysis(coord_system=...): swspy's ZNE-means-zero-inclination logic
+        only runs when the splitting object was built from NonLinLoc hypocenter data
+        (self.nonlinloc_hyp_data); since this pipeline instead passes back_azis_all_stations/
+        receiver_inc_angles_all_stations explicitly (the correct approach for our workflow,
+        not a NonLinLoc lookup), swspy always falls through to reusing whatever inclination
+        was set here regardless of the coord_system passed to perform_sws_analysis - so our
+        own coord_system has to control that value at the source instead.
+
     Returns:
     --------
     swspy.splitting object
         Splitting object ready for analysis with optimized parameters
     """
-    
+
     # Get traces from event_data
     event_traces = event_data.get('traces', [])
     if not event_traces:
         raise ValueError("No traces in event_data")
-    
+
     # Convert to stream if needed
     if isinstance(event_traces, list):
         stream = obspy.Stream(event_traces)
     else:
         stream = event_traces.copy()
-    
+
     # Apply optimal filtering to the stream
     #print(f"  Applying bandpass filter: {freq_min:.1f}-{freq_max:.1f} Hz")
     stream_filtered = stream.copy()
     #stream_filtered.filter("bandpass", freqmin=freq_min, freqmax=freq_max)
-    
+
     # Extract required metadata from event_data
     station_name = event_data.get('station', 'UNKNOWN')
     back_azimuth = event_data.get('back_azimuth')
-    incidence_angle = event_data.get('incidence_eigenvalue_jurkevics')
-    
+    incidence_angle = event_data.get(incidence_field)
+
     # Validate required fields
     if back_azimuth is None or np.isnan(back_azimuth):
         raise ValueError(f"Missing or invalid back_azimuth for station {station_name}")
     if incidence_angle is None or np.isnan(incidence_angle):
-        raise ValueError(f"Missing or invalid incidence angle for station {station_name}")
-    
+        raise ValueError(f"Missing or invalid incidence angle ('{incidence_field}') for station {station_name}")
+
+    if coord_system == "ZNE":
+        rotation_inclination = 0.0  # vertical incidence -> no effective rotation
+    elif coord_system == "LQT":
+        rotation_inclination = incidence_angle
+    else:
+        raise ValueError(f"coord_system must be 'LQT' or 'ZNE', got {coord_system!r}")
+
     # Calculate S-arrival absolute time
     event_time = UTCDateTime(event_data['datetime'])
     s_arrival_time = float(event_data['s_arrival_time'])
     s_arrival_absolute = event_time + s_arrival_time
-    
+
     print(f"  Creating SWSPy splitting object...")
     print(f"    Station: {station_name}")
     print(f"    Back-azimuth: {back_azimuth:.2f}°")
-    print(f"    Incidence: {incidence_angle:.2f}°")
+    print(f"    Incidence ('{incidence_field}'): {incidence_angle:.2f}°, rotation inclination ({coord_system}): {rotation_inclination:.2f}°")
     print(f"    S-arrival: {s_arrival_absolute}")
-    
+
     # Create splitting object with SWSPy using exact pattern from user
     # origin_times = [UTCDateTime(event_data['datetime'])]
     #P_phase_arrival_times=[p_arrival_absolute],
 
     splitting_event = swspy.splitting.create_splitting_object(
-        stream_filtered, 
+        stream_filtered,
         stations_in=[station_name],
         back_azis_all_stations=[back_azimuth],
-        receiver_inc_angles_all_stations=[incidence_angle],
+        receiver_inc_angles_all_stations=[rotation_inclination],
         S_phase_arrival_times=[s_arrival_absolute],
         origin_times = [event_time],
-        first_window_start=first_window_start, 
-        last_window_start=last_window_start, 
-        first_window_end=first_window_end, 
-        last_window_end=last_window_end, n_win=n_win, 
+        first_window_start=first_window_start,
+        last_window_start=last_window_start,
+        first_window_end=first_window_end,
+        last_window_end=last_window_end, n_win=n_win,
         s_pick_uncertainty=s_pick_uncertainty
     )
-    
+
     return splitting_event
     
 def create_splitting_analysis_orig(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty):

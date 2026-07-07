@@ -15,6 +15,7 @@ import numpy as np
 import warnings
 import pickle
 import matplotlib
+import os
 import projection,math
 import util as gutil
 import projection as gproj
@@ -636,11 +637,18 @@ def plot_stations(station_list=None,ax=None,mfc='w',mec='k',ms=10,alpha=1,
     
     return ax
 
-def read_stationfile(station_file='/home/baillard/Dropbox/_Moi/Projects/Axial_EQ/DATA/STATIONS/stations_axial.llz'):
+def read_stationfile(station_file=None):
     """
     Read station file having lon,lat,z,name as columns
+
+    Default station_file resolves to this repo's data/stations_axial.llz - was previously
+    hardcoded to a path on Christian Baillard's own machine (/home/baillard/Dropbox/...),
+    which never existed here.
     """
-    
+
+    if station_file is None:
+        station_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'stations_axial.llz')
+
     print('Make sure coordinates are given in lon and lat')
 
     with open(station_file,'rt') as fic:

@@ -6,7 +6,7 @@ Shear-wave splitting analysis of local seismicity at Axial Seamount on the Juan 
 
 Splitting parameters — fast polarization direction (φ) and delay time (δt) — measure the orientation and density of aligned cracks in the shear-wave window. Tracking how φ and δt change in space and time should constrain how the volcanic stress field reorganizes around eruptive episodes at submarine ridge volcanoes, and feeds into hazard / forecasting work on the Juan de Fuca Ridge.
 
-The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. As of this writing the analysis covers 2015–2021 from the OOI cabled array; future work extends it forward to today and adds the 2022–2024 North Rift Zone OBS deployment.
+The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. As of this writing the analysis covers 2015–2021 from the OOI cabled array; future work extends it forward to today using 2022–2026 data from the **same caldera OBS network** (not a new deployment), sourced from the real-time (RT) version of the MLdd earthquake catalog.
 
 ### Research Objectives
 - Track temporal changes in φ and δt across the 2015 eruption and the subsequent inflation cycle.
@@ -30,7 +30,7 @@ Five caldera-floor stations carry the analysis through the eruption window:
 
 Future additions:
 - **AXID1** for completeness of the cabled array
-- The 15-station 2022–2024 temporary OBS deployment along the **North Rift Zone**
+- **2022–2026 RT-catalog extension**: the same 6 caldera stations, real-time (RT) MLdd catalog variant — not a new/different OBS deployment. Per-station `*_RT_batched.py` scripts and `build_catalog_2022_2026.py` already exist (see [Active code](#active-code-in-scripts)) but have not yet been run to completion.
 
 ### Earthquake catalogs
 
@@ -91,8 +91,20 @@ His scripts (notably `shearwavesplit.py`, `sws_methods.py`, `plotwaveform.py`, `
 Applied uniformly before splitting:
 1. **SNR** (horizontal) > 2.0; signal window S → S+2.0 s; noise window adjusted to avoid P-coda.
 2. **P-wave rectilinearity** > 0.7 over P ± 0.12 s (Jurkevics 1988).
-3. **Incidence angle** < 30° from vertical (from P polarization) — keeps events inside the shear-wave window.
+3. **Incidence angle** < 35° from vertical — see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation) below; the QC cut moved from 30° (legacy P-wave incidence) to 35° when the incidence calculation itself was corrected.
 4. **Magnitude** filter (default M > 0).
+
+### S-wave incidence angle & LQT rotation
+
+LQT ray-based rotation needs the **S-wave** incidence angle at the receiver, not the P-wave incidence angle — using the P-wave Jurkevics incidence (the original QC/rotation angle) for LQT was a bug, since P- and S-wave particle motion have different geometric relationships to the ray (P motion is along the ray → `arccos`; S/SV motion is transverse to it → `arcsin`).
+
+Two corrected incidence-angle methods are implemented and cross-validated against each other and against the legacy P-Jurkevics/TauP approaches on AXEC2 data:
+- **Eigenvalue S-incidence** (`calculate_incidence_angle_eigenvalue_jurkevics_s` in `splitting_functions.py`) — `arcsin(|v1_Z|)` from eigen-decomposition of the S-wave window, where the window is `[S − 0.02 s, S + T_dom]` and `T_dom` comes from SWSPy's own `get_dominant_period_baillard` (not the legacy, broken `estimate_dominant_period`).
+- **PyKonal FMM ray-traced incidence** (`pykonal_raytracer.py::BaillardRayTracer.incidence_angle_at_station`) — eikonal fast-marching ray tracing through the Baillard 3D S-velocity model, angle of the final ray segment from vertical. Chosen over pseudo-bending (`bent_ray`, kept as `baillard_raytraced_incidence.py` for reference) as the more rigorous ray-tracing approach.
+
+TauP-based incidence was tried and dropped (P-Jurkevics/Eigenvalue-S/PyKonal-FMM/TauP were compared directly; see `run_incidence_comparison_axec2_batch1.py`, `run_lqt_zne_incidence_comparison_ax*_batch1.py`). The legacy P-wave Jurkevics incidence function is kept in `splitting_functions.py` for reference only.
+
+A `coord_system` parameter (`'ZNE'` or `'LQT'`) threads through `perform_splitting_on_organized_waveforms` → `perform_splitting_analysis` → `create_splitting_analysis`, controlling whether `0.0` (ZNE, no rotation) or the real incidence angle (LQT) is passed to `swspy.splitting.create_splitting_object`. Production runs use `coord_system='LQT'` with the PyKonal-FMM incidence at a 35° cut. `unit_test_incidence_angle_s.py` unit-tests the eigenvalue S-incidence function (0–90° range enforcement, geometry sanity checks, T_dom-window scaling).
 
 ## Repository Layout
 
@@ -112,6 +124,7 @@ axial-sws/
 │   └── package_updates.md
 ├── swspy/                         # vendored, modified SWSPy (Teanby clustering fix)
 ├── scripts/                       # active code — see below
+├── Axial_Deformation/             # DMODELS (Okada dike + Yang spheroid) input/output grids (untracked)
 └── pylith_axial/                  # PyLith poroelastic caldera stress model — see below
 ```
 
@@ -128,15 +141,34 @@ Baillard-derived modules (still imported by the active workflow):
 Forward-modeling / ray tracing (crack-model side of the pipeline):
 - `hudson_crack_model.py` — Hudson effective-medium theory for randomly-oriented, fluid-saturated penny cracks; stress tensor in, effective stiffness + predicted φ/δt out.
 - `sws_forward_model.py` — MCMC forward model predicting splitting at OBS stations from analytic Mogi/dike stress, using `hudson_crack_model.py`.
-- `sws_raytraced_dt.py`, `pykonal_raytracer.py` — ray tracing (pseudo-bending and eikonal) through the Baillard 3D S-velocity model.
+- `sws_raytraced_dt.py`, `pykonal_raytracer.py` — ray tracing (pseudo-bending and eikonal) through the Baillard 3D S-velocity model; `pykonal_raytracer.py::BaillardRayTracer` is also the production S-wave incidence-angle ray tracer (see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation)).
+- `baillard_raytraced_incidence.py` — standalone `bent_ray` pseudo-bending incidence-angle port, kept as a reference alternative to the PyKonal-FMM method (not used in production).
+- `unit_test_incidence_angle_s.py` — unit tests for the eigenvalue S-wave incidence-angle function.
 - `baillard_velocity.py`, `baillard_simple_model.py`, `baillard_kidiwela_model.py` — 3D S-velocity grid interpolation and simpler Mogi/Yang-source stress-to-splitting proxy models.
+
+Production run + rose plots (AXEC2 full-catalog, LQT + PyKonal-FMM incidence):
+- `run_production_axec2_all_batches.py` — production splitting run over the full 2015–2021 MLdd catalog (497 batches), `coord_system='LQT'`, PyKonal-FMM incidence, 35° cut, `Q_w` retained; writes to `production_axec2_lqt_pykonal_results/` (untracked).
+- `build_production_rose_plots_axec2.py`, `build_production_rose_plots_axec2_qw05.py` — 7-panel (eruption-relative) and annual rose plots from the production run, all-data and `Q_w ≥ 0.5`/φ_err<20°/δt_err<0.04s filtered.
+- `axec2_temporal_histogram_lqt_pykonal.py` — 2D moving-window density histogram of δt/φ vs. time for AXEC2, from the production dataset.
+- `build_raw_ax*_batch1.py`, `build_raw_axec2_all_batches.py`, `fetch_raw_axas2_batch1.py` — raw-waveform QC rebuild (SNR + rectilinearity only, no incidence pre-filter) used to regenerate unbiased inputs for the above, since the pre-existing cached datasets were filtered with the old (buggy) incidence QC.
+- `sws_percent_anisotropy.py` — spatial percent-anisotropy maps (`A = V_s,mean · dt · 100 / r`), per-voxel median (no tomographic inversion) along PyKonal-traced rays.
 
 Production plotting / post-processing (consume `results/` CSVs, one script per figure family):
 - `rose_plots_temporal.py`, `rose_plots_ultra_strict.py`, `rose_plots_strict_filter.py`, `rose_plots_baz.py`.
 - `sws_temporal_*.py`, `sws_tomography_*.py`, `sws_histograms*.py`, `sws_mesh_*.py`, `sws_source_accumulated.py`, `sws_strict_filter_annual.py`, `sws_phi15_filter_plots.py`, `sws_gif_*.py`, `mogi_*.py`, `compute_pgv_*.py`, `plot_pgv_*.py`, `dt_norm_temporal.py`, `cosine_similarity_heatmap.py`, `temporal_histograms.py`, `map_sws_spatial.py`, `seismicity_map.py`, `visualization.py`, `funcs.py`.
 
+Deformation modeling (DMODELS comparison, `Axial_Deformation/`):
+- `deformation_util.py`, `deformation_analysis.py` — fixed/ported versions of Christian Baillard's 2019 `ARTICLE_deformation_util.py`/`ARTICLE_deformation.py`: broken imports repointed at this repo's flat modules, hardcoded paths made relative, matplotlib API updated for current versions (`plt.colormaps[...]`, dropped `savefig(quality=...)`/`frameon=`). Reads DMODELS (Okada dike + Yang spheroid) displacement grids from `Axial_Deformation/*.xyzuvw`, computes 2D stress/strain and the modeled principal-compression direction, and compares against Baillard's own hardcoded splitting/deformation observations (`get_station_obs`), for all 8 catalog stations including AXID1.
+- `deformation_analysis_hemmett.py`, `deformation_geometry_stress_hemmett.py`, `deformation_change_pre1_syn6_hemmett.py`, `deformation_change_voxel_hemmett.py` — `_hemmett` variants that replace Baillard's hardcoded literals with this repo's own splitting-pipeline results (`get_station_obs_hemmett` in `deformation_util.py`), restricted to the 6 production stations (AXID1 excluded, matching `rose_plots_temporal.py`'s `STATION_ORDER`). `_geometry_stress_hemmett` additionally interpolates observed φ spatially along PyKonal-traced rays (per-voxel circular median, matching `sws_percent_anisotropy.py`'s method) rather than using one value per station; `_change_voxel_hemmett` extends the pre→syn linear-fit/RMS comparison from 6 station points to every ray-covered voxel.
+
 Batch execution helpers:
 - `run_ax*_notebook.sh`, `run_axec3_worker*.sh`, `run_axec3_single.sh` — retry-loop wrappers that run the corresponding `_batched.py` script under the `seismo` conda env; `memory_monitor.sh` watches system memory during long runs.
+
+2022–2026 RT-catalog extension (same 6 caldera stations as the main analysis, **not** a new/different OBS deployment - "RT" refers to the real-time version of the MLdd earthquake catalog these events were originally sourced from):
+- `axial_splitting_mldd_AX*_RT_batched.py` — per-station batched splitting runs against the RT catalog.
+- `build_catalog_2022_2026.py` — builds the 2022–2026 RT catalog into this workflow's input format.
+- `run_ax*_RT_notebook.sh` — retry-loop wrappers for the RT batched scripts, mirroring the main batch execution helpers above.
+- Not yet run to completion; not part of the current decadal (2015–2021) production results.
 
 ### Active notebooks in `scripts/`
 
@@ -156,11 +188,9 @@ Plotting and catalog prep:
 
 ### Files kept locally but not tracked
 
-- All of Christian Baillard's plotting/figure framework: `scripts/ARTICLE_*.py`, `scripts/POSTER_*.py`, `scripts/test_*.py`, `scripts/untitled*.py`. These are kept on disk for reference but are not part of the active workflow.
+- Most of Christian Baillard's plotting/figure framework: `scripts/ARTICLE_*.py`, `scripts/POSTER_*.py`, `scripts/test_*.py`, `scripts/untitled*.py`. Kept on disk for reference but not part of the active workflow, and confirmed not imported by anything that is. **Exception**: `ARTICLE_deformation.py`/`ARTICLE_deformation_util.py` are tracked — they're the source `deformation_util.py`/`deformation_analysis.py` were ported from (see [Deformation modeling](#deformation-modeling-dmodels-comparison)).
 - Orphan utilities (`build_cmap.py`, `check_*`, `clean_*`, `concatenate_*`, etc.) and superseded notebooks (`master_shear_wave_splitting_workflow.ipynb`, the `notebooks/` folder, etc.).
 - All data, results, pickles, waveforms (`*.mseed`), and figures (`*.png/pdf/jpg`) — see `.gitignore`.
-- `swspy/` itself — present on disk (clone/copy it separately per [Prerequisites](#prerequisites)) but not committed here.
-- The 2022–2026 North Rift Zone real-time-extension scripts (`*_RT_batched.py`, `run_*_RT_notebook.sh`, `build_catalog_2022_2026.py`) — out of scope for this paper's decadal six-OBS dataset (see [Data](#data)); these belong to the future North Rift Zone follow-on work.
 - A couple of notebooks with large embedded-output JSON (`axial_splitting_mldd_AXEC1_batched.ipynb`, `axial_splitting_mldd_AXEC2_batched.ipynb`, `nonlinloc_apr_14_jun_01_plots.ipynb`) and two not-yet-classified notebooks (`fix_density_plots.ipynb`, `station_tilt.ipynb`).
 
 ## Getting Started
@@ -235,9 +265,47 @@ results = perform_splitting_on_organized_waveforms(
 
 ## Status
 
-- **Active production run**: AXEC2 across the full 2015–2021 MLdd catalog, batched, currently in the high-30s of ~100-event batches.
+- **S-wave incidence angle / LQT rotation fix**: complete — see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation). `coord_system` parameter added throughout the pipeline; production now runs LQT + PyKonal-FMM incidence at a 35° cut.
+- **AXEC2 production run complete**: full 2015–2021 MLdd catalog, 497/497 batches, 88,649 successful LQT + PyKonal-FMM splitting measurements. Rose plots (7-panel + annual, all-data and `Q_w≥0.5` filtered) and a temporal histogram are built from this dataset — see `build_production_rose_plots_axec2*.py`, `axec2_temporal_histogram_lqt_pykonal.py`.
+- **Next**: re-run AXAS1, AXAS2, AXCC1, AXEC1, AXEC3 with the same LQT + PyKonal-FMM pipeline (currently only AXEC2 has been fully re-run; the deformation-modeling comparison below still uses the older P-Jurkevics-incidence per-station results for the other 5 stations as an interim measure), then fold AXCC1 in once tilt-corrected, then complete the 2022–2026 RT-catalog extension (same caldera stations, real-time MLdd catalog variant - see [Data](#data)).
+- **Deformation modeling started**: DMODELS (Okada dike + Yang spheroid) forward-model comparison against observed φ/δt, both replicating Baillard's original 2019 comparison and a new version using this repo's own splitting results — see [Deformation modeling (DMODELS comparison)](#deformation-modeling-dmodels-comparison) below. AXID1 is excluded from the new version (not part of the production catalog); the exact DMODELS source parameters behind most of the individual `.xyzuvw` files are not recoverable from the current `axial_comb_V0.m`/`axial_dike_V0.m` (only the most recent scenario in each is preserved).
 - **Validation**: modified SWSPy and Baillard's single-window method agree to within ~5% on SNR, ≤1° on geometry, and consistent φ/δt across the NonLinLoc cross-check catalog.
-- **Next**: re-run AXAS1, AXEC1, AXEC3 with the same dynamic-parameter / Wang-S-pick pipeline, then fold AXCC1 in once tilt-corrected, then bring in the 2022–2024 North Rift Zone deployment.
+
+## Deformation modeling (DMODELS comparison)
+
+`Axial_Deformation/` (untracked — DMODELS output is data, not source) holds displacement-grid
+output from Christian Baillard's 2019 MATLAB DMODELS tool (`axial_comb_V0.m`: Okada dike(s) +
+Yang/Mogi spherical source superposition; `axial_dike_V0.m`: single-dike sandbox), 12 grids total
+(`def_pre_1/2.xyzuvw`, `def_syn_1..10.xyzuvw`). `deformation_util.py`/`deformation_analysis.py`
+read these grids, compute 2D isotropic-elastic stress/strain and the modeled principal
+(most-compressive) stress direction, and compare it against observed splitting fast direction /
+delay time at each station.
+
+Two comparison paths exist:
+- **Replicated Baillard comparison** (`deformation_analysis.py`) — uses Baillard's own hardcoded
+  per-station splitting/deformation observations (`get_station_obs` in `deformation_util.py`),
+  covering all 8 catalog stations including AXID1.
+- **This repo's data** (`deformation_analysis_hemmett.py` and related `_hemmett` scripts) — replaces
+  those hardcoded literals with median φ/δt computed from this repo's own splitting-pipeline
+  results (`get_station_obs_hemmett`), restricted to the 6 production stations (AXID1 dropped, not
+  part of the production catalog — see `rose_plots_temporal.py`'s `STATION_ORDER`). `dz`
+  (vertical deformation) has no splitting-pipeline analog and is carried over from Baillard's
+  original values for the 6 remaining stations.
+  - `deformation_geometry_stress_hemmett.py` — map of modeled principal-stress-direction tick
+    marks vs. observed φ, the latter spatially interpolated **along PyKonal-traced rays**
+    (per-voxel circular median, ≥5 rays/voxel — same method as `sws_percent_anisotropy.py`)
+    rather than one value per station.
+  - `deformation_change_pre1_syn6_hemmett.py` / `deformation_change_voxel_hemmett.py` — pre→syn
+    eruption change in modeled stress/orientation vs. change in observed δt/φ, with a linear fit
+    + RMS; the `_voxel` version extends this from 6 station points to every ray-covered voxel.
+
+**Caveat**: the DMODELS `.xyzuvw` grids' generating MATLAB scripts were edited in place run-to-run
+(changing a `scenario` switch and hand-editing the output filename each time) rather than being
+checked in per-config, so the exact dike/fault parameters behind most individual files (e.g.
+`def_pre_1`, `def_syn_6`) are not recoverable from the current `axial_comb_V0.m`/`axial_dike_V0.m` —
+only the last-run scenario in each script is preserved. The `_hemmett` comparisons currently also
+use the **older, pre-LQT/PyKonal-FMM** per-station splitting results for 5 of 6 stations (only
+AXEC2 has been fully re-run — see [Status](#status)); revisit once the full re-run is complete.
 
 ## Stress modeling (`pylith_axial/`)
 

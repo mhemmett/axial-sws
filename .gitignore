@@ -20,9 +20,15 @@ pylith_axial/scenarios/
 pylith_axial/mesh/*.msh
 pylith_axial/figures/
 
-# Catalog / waveform caches and stray outputs living directly in scripts/
-scripts/*.csv
-scripts/*.log
+# Catalog / waveform caches and stray outputs anywhere under scripts/ (not just
+# top-level - batch-result/raw-data subdirectories like production_*_results/,
+# raw_*_data/, passing_waveforms_data*/ all generate CSVs at arbitrary depth)
+scripts/**/*.csv
+scripts/**/*.log*
+scripts/**/.done_batches/
+
+# DMODELS deformation-model input/output grids (large binary-ish data, not source)
+*.xyzuvw
 
 # Python / Jupyter cruft
 __pycache__/

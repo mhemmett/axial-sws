@@ -1432,7 +1432,7 @@ def calculate_rectilinearity_jurkevics_for_organized_waveforms(organized_wavefor
 
 def perform_splitting_analysis(event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty,
                                 coord_system="LQT", sws_method="EV_and_XC", incidence_field="incidence_eigenvalue_jurkevics",
-                                cluster_eps=0.15, cluster_min_samples=15, plot_results=False):
+                                cluster_eps=0.15, cluster_min_samples=15, plot_results=False, max_t_shift_s=None):
     """
     Perform shear-wave splitting analysis using data from organized_waveforms.
 
@@ -1470,6 +1470,11 @@ def perform_splitting_analysis(event_data, first_window_start, last_window_start
         default).
     plot_results : bool, optional
         Whether to generate diagnostic plots (default=True)
+    max_t_shift_s : float or None, optional
+        Overrides swspy's grid-search maximum lag time (splitting_obj.max_t_shift_s, default
+        0.30s set in swspy/swspy/splitting/split.py). None (default) leaves swspy's own
+        default in place. Set this to constrain the grid search itself to a physically
+        motivated max delay time, rather than relying on a post-hoc dt cut after measurement.
 
     Returns:
     --------
@@ -1489,6 +1494,9 @@ def perform_splitting_analysis(event_data, first_window_start, last_window_start
         splitting_obj = create_splitting_analysis(event_data, first_window_start=first_window_start, last_window_start=last_window_start,
                                                   first_window_end=first_window_end, last_window_end=last_window_end, n_win=n_win, s_pick_uncertainty=s_pick_uncertainty,
                                                   incidence_field=incidence_field, coord_system=coord_system)
+
+        if max_t_shift_s is not None:
+            splitting_obj.max_t_shift_s = max_t_shift_s
 
         # Get dominant period
         Tmid = splitting_obj.Tmid
@@ -3986,7 +3994,7 @@ def apply_quality_control(organized_waveforms, qc_thresholds):
 def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty, mode='swspy',
                                              coord_system="LQT", sws_method="EV_and_XC", incidence_field="incidence_eigenvalue_jurkevics",
                                              cluster_eps=0.15, cluster_min_samples=15,
-                                             plot_results=False):
+                                             plot_results=False, max_t_shift_s=None):
     """
     Perform shear-wave splitting analysis on all events in organized_waveforms.
 
@@ -4015,6 +4023,10 @@ def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_s
         DBSCAN eps for mode='swspy' window clustering, default 0.15 (swspy's own default).
     cluster_min_samples : int, optional
         DBSCAN min_samples for mode='swspy' window clustering, default 15 (swspy's own default).
+    max_t_shift_s : float or None, optional
+        mode='swspy' only - overrides swspy's grid-search maximum lag time (default 0.30s).
+        Passed straight through to perform_splitting_analysis. None (default) leaves swspy's
+        own default in place.
 
     Returns:
     --------
@@ -4136,7 +4148,8 @@ def perform_splitting_on_organized_waveforms(organized_waveforms, first_window_s
                 splitting_result, splitting_obj = perform_splitting_analysis(
                     event_data, first_window_start, last_window_start, first_window_end, last_window_end, n_win, s_pick_uncertainty,
                     coord_system=coord_system, sws_method=sws_method, incidence_field=incidence_field,
-                    cluster_eps=cluster_eps, cluster_min_samples=cluster_min_samples, plot_results=plot_results
+                    cluster_eps=cluster_eps, cluster_min_samples=cluster_min_samples, plot_results=plot_results,
+                    max_t_shift_s=max_t_shift_s
                 )
 
             elif mode=='teanby_baillard':

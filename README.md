@@ -53,7 +53,7 @@ The repository also contains Christian Baillard's original single-window Python 
 ### Modified SWSPy (production)
 
 Vendored in `swspy/` with corrections relative to upstream:
-- **Hierarchical Ward clustering** (replacing upstream DBSCAN) in a circular-safe `(δt cos 2φ, δt sin 2φ)` coordinate space, matching MFAST.
+- **DBSCAN clustering** (`eps=0.15`, `min_samples=15`) in a circular-safe `(δt cos 2φ, δt sin 2φ)` coordinate space, matching MFAST.
 - **Teanby (2004) representative variance** (Eq. 13–14) for cluster selection; best observation within the chosen cluster is the one with minimum observation variance.
 - MFAST-compliant `Ncmin = 1`, `Mmax = 15`.
 - **Dynamic windowing** based on the dominant period `T_dom` of each event, following the **MFAST 2.2** window-construction approach, rather than upstream SWSPy's fixed window lengths.
@@ -79,7 +79,7 @@ His scripts (notably `shearwavesplit.py`, `sws_methods.py`, `plotwaveform.py`, `
 | Window strategy | multiple windows, cluster in window space | single adaptive window |
 | Window length | dynamic, based on `T_dom` (MFAST-style) | `T_dom × [0.5, 2.0]` |
 | S-arrival placement | Wang (2024) S-pick uncertainty | Baillard adaptive |
-| Clustering | Ward, circular-safe `(δt, φ)` | parameter-space minima |
+| Clustering | DBSCAN, circular-safe `(δt, φ)` | parameter-space minima |
 | Quality metric | F-statistic 95% region | RMS difference |
 
 ### Quality control
@@ -165,6 +165,39 @@ Batch execution helpers:
 - `build_catalog_2022_2026.py` — builds the 2022–2026 RT catalog into this workflow's input format.
 - `run_ax*_RT_notebook.sh` — retry-loop wrappers for the RT batched scripts, mirroring the main batch execution helpers above.
 - Not yet run to completion; not part of the current decadal (2015–2021) production results.
+
+Geodetic (BPR uplift) vs. fast-direction comparison:
+- `process_bpr_detided_depth*.py` (`_ccal`, `_ashes`, and the undecorated Eastern Caldera/AXEC2
+  variant) — de-tide the raw OOI BOTPT (bottom pressure recorder) seafloor-depth record for the
+  Central Caldera (AXCC1), ASHES (AXAS1), and Eastern Caldera (AXEC2) sites into
+  `data/bpr_detided_seafloor_depth*.csv`.
+- `bpr_inflation_periods*.py` — turn a de-tided depth record into a daily-mean, rolling-window
+  "uplift" series referenced to the post-eruption minimum (`load_daily_series()`).
+- `axec2_uplift_phi_cosine_vs_time.py` — shared rolling fast-direction (φ) module; provides
+  `rolling_phi_stats_daily_then_roll` (per-calendar-day circular mean, then a centered rolling
+  mean — matches the uplift side's own daily-mean-first approach) used by the fit scripts below.
+- `animate_arctan_stress_vectors.py` — defines the current production fit,
+  `fit_atan2_vectorsum`/`invert_atan2_vectorsum`: φ as `C1 + C2·atan2(Y,X)` of a vector sum of a
+  fixed-azimuth regional tectonic-stress vector and a growing inflation vector: physically
+  motivated model derived from and superseding earlier cube-root/erfc/sigmoid fit attempts.
+  Also provides the shared grayscale-bathymetry/station-xy helpers (`load_bathy_gray`,
+  `load_station_xy`) and drives the animated GIF figures.
+- `atan2_uplift_vs_phi_sixstations_ccal_30day.py` — production 6-station version: every station
+  (AXAS1, AXAS2, AXCC1, AXEC1, AXEC2, AXEC3) fit against the **same** Central Caldera BOTPT
+  uplift series (not each station's own local BOTPT), with matched 30-day rolling windows on
+  both axes (φ and uplift) — the earlier 3-station version mixed 90-day φ against 90-day uplift,
+  and before that 180-day φ against 30-day uplift. Per-station turnover (`u0`, the fixed uplift
+  value the fitted curve's steepest transition is pinned to) is auto-estimated via a free-
+  location logistic pre-fit, rather than hand-picked. Exposes `compute_all_station_fits()` for
+  reuse by other scripts. Produces
+  `atan2_uplift_vs_phi_sixstations_ccal_30day.pdf` (6 pages).
+- `inflation_vector_map_sixstations_ccal.py` — single-page grayscale-bathymetry caldera map
+  (reusing `animate_arctan_stress_vectors.py`'s bathymetry/station helpers), all 6 stations as
+  yellow triangles, with a red arrow per station in the direction of that station's fitted
+  inflation-vector azimuth (`beta_az`) from the fit above. **Caveat**: AXCC1's fit currently has
+  an anomalously large `A` parameter, producing a near-discontinuous (rather than smooth
+  S-curve) transition — its arrow direction is less trustworthy than the other 5 stations' until
+  that fit is revisited.
 
 ### Active notebooks in `scripts/`
 

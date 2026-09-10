@@ -223,15 +223,21 @@ class BaillardRayTracer:
         cols : int array   flat voxel indices into NX×NY×NZ grid
         vals : float array  path lengths [km] through each voxel
         """
-        # TODO (human decision — Vs double-counting / kernel-vs-conversion convention):
+        # NOTE (Vs double-counting / kernel-vs-conversion convention):
         # This kernel is purely GEOMETRIC — A_ij is the ray path length [km] through
-        # voxel j, so the recovered u_j,v_j are anisotropy *per km* (m_j in s/km).
-        # The downstream ΔVs/Vs conversion (m_to_fractional / m_to_dvs_over_vs) then
-        # re-divides by the local Vs.  Whether δt should instead be written as a
-        # *travel-time* kernel (path length / Vs) so that the model parameter is the
-        # dimensionless anisotropy directly — avoiding a possible double use of Vs —
-        # is a modelling decision flagged for the human.  Do NOT change this kernel
-        # without coordinating that convention with the conversion step.
+        # voxel j, so the recovered u_j,v_j are anisotropy *per km* (m_j in s/km),
+        # and callers that use path length directly still need their own downstream
+        # ΔVs/Vs conversion (m_to_fractional / m_to_dvs_over_vs) that re-divides by
+        # the local Vs. That double use of Vs (once implicitly via the ray-traced
+        # path geometry, once explicitly in the conversion) was flagged here for a
+        # human decision. Resolution (lqt_pykonal_tomography_backprojection.py):
+        # rather than changing this shared method (other scripts still consume its
+        # geometric path-length convention paired with their own conversion),
+        # that script now divides this method's returned path lengths by the local
+        # Vs itself, building its OWN travel-time kernel (path/Vs) locally so its
+        # back-projected (U,V) is ΔVs/Vs directly, with no separate conversion step.
+        # Do not change THIS method's return convention (path length, km) without
+        # auditing every caller's conversion step.
         NX, NY, NZ = len(xn), len(yn), len(zn)
         VXY = xn[1]-xn[0] if len(xn)>1 else 0.3
         VZ  = zn[1]-zn[0] if len(zn)>1 else 0.25

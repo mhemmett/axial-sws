@@ -19,14 +19,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os,sys
-import pickle
 import glob
+#import pickle
+#import glob
 import matplotlib as mpl
 
 import deformation_util as adutil
 from obspy import UTCDateTime
-import shearwavesplit as sws
-import sws_methods as swm
+#import shearwavesplit as sws
+#import sws_methods as swm
 import GMT as ggmt
 from sws_methods import get_ax_inset,get_ax_polarinsets,pol2cart, cart2pol
 from scipy.optimize import curve_fit
@@ -667,6 +668,35 @@ def get_station_obs_hemmett(period='syn'):
     output, so it is carried over unchanged from get_station_obs() for the stations
     that have it.
 
+    Data sources: AXAS2 uses the old (fixed 5-40 Hz) full 2015-2021 pipeline
+    results, unchanged (no new-data rerun exists for it yet). AXCC1/AXEC1/AXEC2/
+    AXEC3/AXAS1 use the NEW mfast max_dt=0.2s data (per-event adaptive bandpass,
+    max_t_shift_s=0.20s -- the physically-motivated S-wave-travel-time max delay,
+    replacing the earlier max_t_shift_s=0.30s mfast data this function used
+    previously):
+      AXCC1/AXEC1/AXEC3/AXAS1: mfast_maxdt_pipeline_transfer/splitting_results_
+        {AXCC1,AXEC1,AXEC3,AXAS1}_{2015_2021,2022_2026}_all_batches.csv (all
+        complete -- AXEC3/AXAS1 reruns finished 2026-07-23, moved here from the
+        old-data group this function previously used for them).
+      AXEC2: mfast_maxdt_pipeline_transfer/splitting_results_AXEC2_2022_2026_
+        all_batches.csv (complete) + our OWN maxdt02 re-run's 2015-2021 batches
+        (production_axec2_mfast_filters_maxdt02_lqt_pykonal_results/, now
+        COMPLETE - all 497 batches, unlike the earlier still-running state this
+        function's docstring previously described), joined against
+        raw_axec2_all_batches_mfast_filters_data/raw_axec2_all_batches_mfast_
+        filters_metadata.csv for event location where needed (not used here,
+        since this function only needs phi/dt/quality/errors/datetime).
+
+    QC: quality>QUALITY_MIN, phi_error<PHI_ERR_MAX, dt_error<DT_ERR_MAX, dt>0 for
+    all 6 stations. The 5 new-data stations (AXCC1/AXEC1/AXEC2/AXEC3/AXAS1)
+    additionally get the dt<=T_dom/2 cycle-skip-risk cut (per-event dominant
+    period -- carried directly as `dominant_period` in the mfast_maxdt_pipeline_
+    transfer files, or computed as chosen_filter_dom_period_samples/200.0 for
+    the AXEC2 2015-2021 batches, same convention as rose_7period_5stations_
+    newdata.py) - AXAS2's old pipeline doesn't track a per-event dominant period
+    so this cut can't be applied to it (same caveat as
+    figure_all_stations_temporal_fractional_dt.py).
+
     UsedIn
     -------
     plot_sigma1_stations (fast, lag - lag is in SECONDS, not samples: pass
@@ -677,36 +707,71 @@ def get_station_obs_hemmett(period='syn'):
         raise ValueError('period must be in [pre,syn] for get_station_obs_hemmett')
 
     HERE = os.path.dirname(os.path.abspath(__file__))
-    RESULTS_DIR = os.path.join(HERE, '..', 'results')
+    OLD_RESULTS_DIR = '/Users/mhemmett/Seismology/axial-sws/lqt_pykonal_combined_results/'
+    NEWDATA_DIR = os.path.join(HERE, '..', 'mfast_maxdt_pipeline_transfer')
+    AXEC2_2015_2021_DIR = os.path.join(HERE, 'production_axec2_mfast_filters_maxdt02_lqt_pykonal_results')
 
-    STATION_FILES = {
-        'AXCC1': ['splitting_results_mldd_2015_2021_axcc1_all_batches.csv'],
-        'AXEC1': ['splitting_results_mldd_2015_2021_axec1_all_batches.csv'],
-        'AXEC2': sorted(glob.glob(os.path.join(RESULTS_DIR,
-                    'splitting_results_mldd_2015_2021_axec2_batch_*.csv.csv'))),
-        'AXEC3': ['splitting_results_mldd_2015_2021_axec3_all_batches.csv'],
-        'AXAS1': ['splitting_results_mldd_2015_2021_axas1.csv'],
-        'AXAS2': ['splitting_results_mldd_2015_2021_axas2.csv'],
+    OLD_STATION_FILES = {
+        'AXAS2': ['splitting_results_AXAS2_2015_2021_all_batches.csv'],
     }
+    NEWDATA_STATION_FILES = {
+        'AXCC1': ['splitting_results_AXCC1_2015_2021_all_batches.csv',
+                  'splitting_results_AXCC1_2022_2026_all_batches.csv'],
+        'AXEC1': ['splitting_results_AXEC1_2015_2021_all_batches.csv',
+                  'splitting_results_AXEC1_2022_2026_all_batches.csv'],
+        'AXEC2': ['splitting_results_AXEC2_2022_2026_all_batches.csv'],
+        'AXEC3': ['splitting_results_AXEC3_2015_2021_all_batches.csv',
+                  'splitting_results_AXEC3_2022_2026_all_batches.csv'],
+        'AXAS1': ['splitting_results_AXAS1_2015_2021_all_batches.csv',
+                  'splitting_results_AXAS1_2022_2026_all_batches.csv'],
+    }
+    NEWDATA_STATIONS = set(NEWDATA_STATION_FILES)
 
     ERUPTION_START = pd.Timestamp('2015-04-24 06:00', tz='UTC')
     ERUPTION_END = pd.Timestamp('2015-05-19 00:00', tz='UTC')
 
     PHI_ERR_MAX = 20.0
-    DT_ERR_MAX = 0.04
+    DT_ERR_MAX = 0.05   # matches the filter convention established for the new data
+                        # elsewhere this session (rose_7period_axcc1_axec1_axec2_newdata.py,
+                        # histograms_all_columns_newdata_combined.py, traveltime_anisotropy_
+                        # 7period_axcc1_axec1_axec2_newdata.py) -- was 0.04 previously.
+    QUALITY_MIN = 0.5
 
     dz_by_station = get_station_obs(period=period)
 
+    def _load(station):
+        if station in NEWDATA_STATIONS:
+            paths = [os.path.join(NEWDATA_DIR, f) for f in NEWDATA_STATION_FILES[station]]
+            dfs = [pd.read_csv(p) for p in paths]
+            if station == 'AXEC2':
+                batch_files = sorted(glob.glob(os.path.join(
+                    AXEC2_2015_2021_DIR,
+                    'splitting_results_mldd_2015_2021_axec2_mfast_filters_maxdt02_batch_*.csv')))
+                batch_dfs = [pd.read_csv(f) for f in batch_files]
+                for d in batch_dfs:
+                    if len(d) > 0:
+                        d['dominant_period'] = d['chosen_filter_dom_period_samples'] / 200.0
+                dfs.extend(d for d in batch_dfs if len(d) > 0)
+            df = pd.concat(dfs, ignore_index=True)
+        else:
+            paths = [os.path.join(OLD_RESULTS_DIR, f) for f in OLD_STATION_FILES[station]]
+            dfs = [pd.read_csv(p) for p in paths]
+            df = pd.concat(dfs, ignore_index=True) if len(dfs) > 1 else dfs[0]
+        return df
+
     dic_sta_obs = {}
-    for station, files in STATION_FILES.items():
-        paths = [f if os.path.isabs(f) else os.path.join(RESULTS_DIR, f) for f in files]
-        dfs = [pd.read_csv(p) for p in paths]
-        df = pd.concat(dfs, ignore_index=True) if len(dfs) > 1 else dfs[0]
+    for station in ['AXCC1', 'AXEC1', 'AXEC2', 'AXEC3', 'AXAS1', 'AXAS2']:
+        df = _load(station)
 
-        df = df.dropna(subset=['phi', 'dt', 'phi_error', 'dt_error'])
-        df = df[(df['phi_error'] < PHI_ERR_MAX) & (df['dt_error'] < DT_ERR_MAX)]
+        df = df.dropna(subset=['phi', 'dt', 'phi_error', 'dt_error', 'quality'])
+        df = df[(df['dt'] > 0) & (df['phi_error'] < PHI_ERR_MAX) &
+                (df['dt_error'] < DT_ERR_MAX) & (df['quality'] > QUALITY_MIN)]
 
-        t = pd.to_datetime(df['event_datetime'], utc=True)
+        if station in NEWDATA_STATIONS:
+            df = df.dropna(subset=['dominant_period'])
+            df = df[df['dt'] <= df['dominant_period'] / 2.0]
+
+        t = pd.to_datetime(df['datetime'], utc=True, format='ISO8601')
         if period == 'pre':
             mask = t < ERUPTION_START
         else:

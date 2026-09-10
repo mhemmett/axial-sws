@@ -106,14 +106,13 @@ CAMERA_UP    = (0.0, 0.0, 1.0)
 # ── Von Mises computation ─────────────────────────────────────────────────────
 
 # Unit provenance for cauchy_stress (must match run_sweep.py):
-#   The mesh in mesh/generate_mesh.py is built in KM, but cfg/pylithapp.cfg sets
-#   only `reader.coordsys.space_dim = 3` with no coordinate units, so PyLith's
-#   reader interprets the node coordinates as METRES, uniformly rescaling all
-#   geometry by 1000x. Every BC is either homogeneous (=0) or a fixed
-#   stress/pressure Dirichlet value, with no gravity/body force, so the Cauchy
-#   stress solution is invariant under this uniform rescale — PyLith's raw
-#   output is already true Pa. No stress correction is needed; only convert to
-#   MPa (divide by 1e6).
+#   FIXED 2026-07-22: cfg/pylithapp.cfg now sets `reader.coordsys.units = km`,
+#   so PyLith's mesh reader correctly scales node coordinates by 1000x on
+#   read (previously unset -> coordinates were misread as metres). With that
+#   fixed there's no geometric rescale artifact left, so PyLith's raw
+#   cauchy_stress output is true Pa and no STRESS_SCALE correction is needed
+#   -- only convert to MPa (divide by 1e6). Outputs generated before this fix
+#   used the old (unfixed) mesh scale and should be re-run for comparison.
 STRESS_SCALE = 1.0
 
 

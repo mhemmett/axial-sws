@@ -29,7 +29,7 @@ import swspy
 ## Repository map
 
 - `scripts/` — ~824 files; only a small subset is active (below), the rest is dormant/reference.
-- `swspy/` — vendored SWSPy fork (Ward clustering fix). Semi-external: changes here should track a
+- `swspy/` — vendored SWSPy fork (DBSCAN clustering fix). Semi-external: changes here should track a
   specific upstream fix, not general refactors.
 - `data/`, `pickles/`, `results/` — gitignored, local-only. Don't assume populated; ask rather than
   guess a path or fabricate data if something's missing.
@@ -61,7 +61,9 @@ draws on two other sources, not upstream SWSPy alone:
 `sws_methods.py`, `shearwavesplit.py`, `plotwaveform.py`, `GMT.py`, `projection.py`, `util.py`,
 `sws_vertices.py`.
 
-**`teanby_clustering.py`** — Ward-clustering / Teanby (2004) cluster-selection helpers for the SWSPy path.
+**`teanby_clustering.py`** — Calinski-Harabasz / Duda-Hart cluster-count selection helpers; a separate
+path from the production SWSPy clustering (DBSCAN + Teanby (2004) representative-variance selection in
+`swspy/swspy/splitting/split.py::_sws_win_clustering`) — not used by the production pipeline.
 
 **Everything else in `scripts/`** (`ARTICLE_*.py`, `POSTER_*.py`, `test_*.py`, `untitled*.py`, orphan
 `check_*`/`clean_*`/`concatenate_*` utilities, superseded notebooks) is reference-only, not active — see

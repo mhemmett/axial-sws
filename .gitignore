@@ -19,6 +19,10 @@ pylith_axial/output/
 pylith_axial/scenarios/
 pylith_axial/mesh/*.msh
 pylith_axial/figures/
+# Converted from the already-gitignored Axial_Deformation/*.xyzuvw grids by
+# convert_deformation_spatialdb.py - generated data, not source (found 2026-09-10,
+# same accidental-tracking issue as the top-level results dirs above).
+pylith_axial/spatialdb/deformation/
 
 # Catalog / waveform caches and stray outputs anywhere under scripts/ (not just
 # top-level - batch-result/raw-data subdirectories like production_*_results/,
@@ -26,6 +30,35 @@ pylith_axial/figures/
 scripts/**/*.csv
 scripts/**/*.log*
 scripts/**/.done_batches/
+
+# Top-level pipeline-transfer/results directories (same class of generated data as
+# results/ above, just not nested under it - large per-batch CSVs, not source. Found
+# 2026-09-10 accidentally tracked via the cron safety-net commit's broad `git add`,
+# bloating the repo to ~1.85GB before being stripped back out - see git history.)
+lqt_pykonal_combined_results/
+mfast_maxdt_pipeline_transfer/
+mfast_maxdt_windowcheck_pipeline_transfer/
+sws_tomography_johnson2011_results/
+
+# Notebooks kept locally for reference but explicitly not tracked (see README's
+# "Files kept locally but not tracked"): large embedded-output JSON, superseded
+# workflow notebooks, and not-yet-classified ones.
+notebooks/
+scripts/master_shear_wave_splitting_workflow.ipynb
+scripts/master_shear_wave_splitting_workflow_christian_data.ipynb
+scripts/axial_splitting_mldd_AXEC1_batched.ipynb
+scripts/axial_splitting_mldd_AXEC2_batched.ipynb
+scripts/nonlinloc_apr_14_jun_01_plots.ipynb
+scripts/fix_density_plots.ipynb
+scripts/station_tilt.ipynb
+
+# Baillard's dormant reference scripts (see README's "Files kept locally but not
+# tracked") - untracked once (commit 1b879e5) but never actually gitignored, so a
+# broad `git add` silently re-tracks them.
+scripts/ARTICLE_*.py
+scripts/POSTER_*.py
+scripts/test_*.py
+scripts/untitled*.py
 
 # DMODELS deformation-model inputs/outputs (data, incl. the MATLAB generator scripts
 # themselves - not part of the tracked analysis pipeline)

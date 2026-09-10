@@ -63,16 +63,20 @@ def load_cell_h5(path, field):
     return centers, data
 
 # Unit provenance for cauchy_stress (must match plot_stress_3d.py):
-#   The mesh in mesh/generate_mesh.py is built in KM, but cfg/pylithapp.cfg sets
-#   only `reader.coordsys.space_dim = 3` with no coordinate units, so PyLith's
-#   reader interprets the node coordinates as METRES. (`scales.length_scale =
-#   1.0*km` is the nondimensionalization scale, NOT a coordinate-unit conversion.)
-#   Net effect: the simulated domain is 1000x too small, so strains — and hence
-#   cauchy_stress — come out 1000x too large. PyLith writes stress in nominal Pa.
-#   STRESS_SCALE undoes that 1000x inflation to recover true Pa; downstream plots
-#   then divide by 1e6 to reach MPa. (Verified: median bulk stress perturbation is
-#   ~2.3% of source ΔP, physically sensible for elastic decay from a Mogi source.)
-STRESS_SCALE = 1.0 / 1000.0
+#   FIXED 2026-07-22: cfg/pylithapp.cfg now sets `reader.coordsys.units = km`,
+#   so PyLith's mesh reader correctly scales node coordinates by 1000x on read
+#   (previously unset -> coordinates were misread as metres, `scales.length_scale
+#   = 1.0*km` is only the nondimensionalization scale, not a coordinate-unit
+#   conversion, so it didn't fix this). Before the fix, the simulated domain was
+#   1000x too small, so strains/cauchy_stress came out 1000x too large, and this
+#   STRESS_SCALE undid that inflation (verified then: median bulk stress
+#   perturbation ~2.3% of source dP, physically sensible for a Mogi source).
+#   With the mesh fix in place there's no inflation left to undo, so
+#   STRESS_SCALE is now 1.0 -- PRE-FIX output/*.h5 files are STALE (generated
+#   at the wrong mesh scale) and must be re-run before comparing against
+#   anything produced after this change; the 2.3% check above should be
+#   re-verified against a post-fix re-run rather than assumed to still hold.
+STRESS_SCALE = 1.0
 
 
 def find_scenario_file(label, suffix):

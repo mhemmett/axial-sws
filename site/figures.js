@@ -15,6 +15,11 @@ window.AXIAL_FIGURE_META = {
       "label": "OLDER RUN",
       "tone": "warn",
       "tooltip": "From the July 2026 raw-quality inversion, not the Grade-3 windowcheck run. Shown because no Grade-3 checkerboard was produced."
+    },
+    "stale_threshold": {
+      "label": "THRESHOLD OUT OF DATE",
+      "tone": "warn",
+      "tooltip": "Diagram shows Q_w ≥ 0.5; production Grade 3 is Q_w ≥ 0.75. Needs redrawing."
     }
   },
   "groups": {
@@ -257,8 +262,10 @@ window.AXIAL_FIGURES = [
     "tab": "methods",
     "group": null,
     "title": "Splitting measurement pipeline",
-    "caption": "End-to-end workflow: waveform retrieval and QC, dominant-period estimation, MFAST-style dynamic windowing, LQT rotation on the PyKonal-traced S incidence, Silver & Chan eigenvalue minimisation over the window/lag/angle grid, and DBSCAN clustering with Teanby (2004) representative-variance selection.",
-    "badge": [],
+    "caption": "End-to-end workflow: waveform retrieval and QC, dominant-period estimation, MFAST-style dynamic windowing, LQT rotation on the PyKonal-traced S incidence, Silver & Chan eigenvalue minimisation over the window/lag/angle grid, and DBSCAN clustering with Teanby (2004) representative-variance selection. Note: the \"Final Filtering\" box in this diagram gives Q_w ≥ 0.5 as its example threshold; the production Grade-3 cut is Q_w ≥ 0.75. The diagram's text is baked into vector glyph paths and it has no generating script, so correcting it means rebuilding the figure by hand.",
+    "badge": [
+      "stale_threshold"
+    ],
     "featured": false,
     "src": "assets/figures/methods/methods-pipeline.svg",
     "width": 1600,

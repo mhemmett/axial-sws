@@ -32,7 +32,8 @@ window.AXIAL_FIGURE_META = {
     "geodetic": "Geodetic vs. fast direction",
     "delay": "Delay time",
     "anisotropy": "Percent anisotropy",
-    "inversion": "2D inversion — Johnson et al. (2011)"
+    "inversion": "2D inversion — Johnson et al. (2011)",
+    "correlation": "Correlation matrices"
   }
 };
 
@@ -454,7 +455,7 @@ window.AXIAL_FIGURES = [
     "featured": true,
     "src": "assets/figures/results/geo-region-west.webp",
     "width": 1600,
-    "height": 1393
+    "height": 1352
   },
   {
     "id": "geo-region-east",
@@ -480,7 +481,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-region-central.webp",
     "width": 1600,
-    "height": 1405
+    "height": 1366
   },
   {
     "id": "geo-atan2-axas1",
@@ -492,7 +493,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axas1.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-atan2-axas2",
@@ -504,7 +505,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axas2.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-atan2-axcc1",
@@ -516,7 +517,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axcc1.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-atan2-axec1",
@@ -528,7 +529,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec1.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-atan2-axec2",
@@ -540,7 +541,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec2.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-atan2-axec3",
@@ -552,7 +553,7 @@ window.AXIAL_FIGURES = [
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec3.webp",
     "width": 1600,
-    "height": 1404
+    "height": 1365
   },
   {
     "id": "geo-inflation-map",
@@ -661,6 +662,66 @@ window.AXIAL_FIGURES = [
     "src": "assets/figures/results/geo-bpr-ashes.webp",
     "width": 1600,
     "height": 1015
+  },
+  {
+    "id": "geo-modelcmp-west",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — Western Caldera",
+    "caption": "Fifteen candidate families fitted to the same western regional φ-vs-uplift data and ranked by AICc: linear, quadratic, cubic, logarithmic, square root, cube root, power law, exponential decay and saturation, hyperbolic, logistic, tanh, arctangent, erfc, and the production atan2 vector-sum. NO FORM IS SUPPORTED HERE — R² is 0.13–0.16 on the thinned series and the whole 15-model field spans only ΔAICc 7.2, so nothing is distinguishable. The atan2 model ranks last of fifteen on the thinned series.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-west.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-east",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — Eastern Caldera",
+    "caption": "Same battery on the eastern regional mean, where a real relationship does exist (R² ≈ 0.48 daily, 0.35 thinned). Its SHAPE is not resolved: arctangent wins on the raw series but plain LINEAR wins once the series is decimated to ~independent samples, with eleven of fifteen models inside ΔAICc 2.3 of each other. The fitted curves overlay almost exactly across the observed uplift range. The atan2 vector-sum model ranks 8th raw and 12th thinned. Median residual lag-1 ρ = 0.948, so effective N ≈ 82 of 3064 — which is why the raw ranking cannot be taken at face value.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-east.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "corr-post-daily",
+    "tab": "results",
+    "group": "correlation",
+    "title": "Correlation matrices — post-eruption, daily",
+    "caption": "Every station's rolling φ and δt against every other station's and against Central Caldera BOTPT uplift. Three different coefficients, not interchangeable: φ–φ uses the Jammalamadaka–Sarma circular-circular correlation on doubled (axial) angles; δt–δt and δt–uplift use Pearson; φ–δt and φ–uplift use the circular-linear R, which is UNSIGNED (0–1) and must not be read as if high meant positive. Pearson on raw φ would be wrong — it would treat 179° and 1° as maximally different. This page is daily-sampled and therefore autocorrelated; its significance is overstated.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/results/corr-post-daily.webp",
+    "width": 2400,
+    "height": 1886
+  },
+  {
+    "id": "corr-post-thin",
+    "tab": "results",
+    "group": "correlation",
+    "title": "Correlation matrices — post-eruption, thinned",
+    "caption": "The same matrices decimated to one point per 30 days, roughly the decorrelation scale — believe this page where it disagrees with the daily one. Strongest station-station φ coupling is AXAS1–AXEC2 (r = 0.67), then AXCC1–AXEC3 (0.54). Against uplift, φ at AXAS1 (R = 0.79), AXEC2 (0.72) and AXCC1 (0.65) track the geodetic record most closely; δt tracks it far more weakly except at AXAS1 (0.58). Median pairwise N = 51.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/corr-post-thin.webp",
+    "width": 2400,
+    "height": 1886
+  },
+  {
+    "id": "corr-full-thin",
+    "tab": "results",
+    "group": "correlation",
+    "title": "Correlation matrices — full record, thinned",
+    "caption": "The same matrices over the full record including the 2015 eruption. Station-station values here are inflated by the shared eruption-step response — every station responds to the same event, which registers as covariation whether or not the stations are otherwise coupled. Useful for seeing which stations respond in step; not a measure of ongoing coupling. AXEC2's unlevelled window is dropped throughout, and AXCC1's 2015-03-01 to 2015-04-28 gap is simply absent.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/corr-full-thin.webp",
+    "width": 2400,
+    "height": 1886
   },
   {
     "id": "delay-ec2-multipanel",

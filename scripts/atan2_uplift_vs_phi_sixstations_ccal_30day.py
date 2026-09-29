@@ -201,11 +201,12 @@ def make_page(fit, flag_unleveled):
 
     x_line = np.linspace(x.min(), x.max(), 200)
     y_line = model(x_line, C1, C2, A, beta)
+    # The atan2 vector-sum equation itself is deliberately NOT in the legend -- it dominated
+    # the overlay and is documented in the module docstring and on the project site instead.
+    # Fitted parameter values stay, since those are what a reader needs off the figure.
     ax.plot(x_line, y_line, color='black', lw=1.5, linestyle='--',
-           label=r'$\phi(u_z)=C_1+C_2\mathrm{atan2}(Y,X)$'
-                 r'$,\ Y=A\sin\alpha+(\frac{u_z-u_0}{A}-A\cos(\alpha-\beta))\sin\beta,\ $'
-                 r'$X=A\cos\alpha+(\frac{u_z-u_0}{A}-A\cos(\alpha-\beta))\cos\beta$'
-                 f'\n$C_1$={C1:.2f}, $C_2$={C2:.2f}, A={A:.3f} (all free)\n'
+           label='atan2 vector-sum fit\n'
+                 f'$C_1$={C1:.2f}, $C_2$={C2:.2f}, A={A:.3f} (all free)\n'
                  f'background vector azimuth α={ALPHA_FIXED_AZ_DEG:.0f}° (fixed), inflation '
                  f'vector azimuth β={beta_az:.1f}°\n(r = {r:.2f}, N = {len(x)})')
     ax.axvline(u0, color='gray', lw=0.6, linestyle=':',

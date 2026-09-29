@@ -1,0 +1,642 @@
+{
+  "_comment": "Figure manifest for the Axial SWS site. 'source' is repo-relative and is READ ONLY - build_figures.py never modifies, moves, or commits source files. 'page' is 1-indexed. 'width' overrides defaults.width for dense multi-panel figures. 'badge' marks a figure that predates the Grade-3/windowcheck pipeline so it is never silently shown as current.",
+  "defaults": {
+    "width": 1600,
+    "quality": 88,
+    "format": "webp"
+  },
+  "badges": {
+    "pre_windowcheck": {
+      "label": "PRE-WINDOWCHECK",
+      "tone": "warn",
+      "tooltip": "Generated before the 2026-07-24 undersized-window fix. Not from the current Grade-3 production chain."
+    },
+    "partial_stations": {
+      "label": "3 OF 6 STATIONS",
+      "tone": "warn",
+      "tooltip": "Pools AXCC1 + AXEC1 + AXEC2 only. A six-station regeneration is pending."
+    },
+    "older_inversion": {
+      "label": "OLDER RUN",
+      "tone": "warn",
+      "tooltip": "From the July 2026 raw-quality inversion, not the Grade-3 windowcheck run. Shown because no Grade-3 checkerboard was produced."
+    }
+  },
+  "groups": {
+    "rose": "Rose plots — tier 3",
+    "geodetic": "Geodetic vs. fast direction",
+    "delay": "Delay time",
+    "anisotropy": "Percent anisotropy",
+    "inversion": "2D inversion — Johnson et al. (2011)"
+  },
+  "figures": [
+    {
+      "id": "context-seismicity",
+      "tab": "overview",
+      "title": "Caldera setting and relocated seismicity",
+      "source": "scripts/spatial_seismicity_catalog_all_stations.pdf",
+      "page": 1,
+      "width": 1800,
+      "caption": "Axial Seamount caldera. Native-colour bathymetry, every processed event in the MLdd catalog (deduplicated by origin time across the six stations), and the six OOI Regional Cabled Array OBS stations.",
+      "quality": 80
+    },
+    {
+      "id": "context-basemap",
+      "tab": "overview",
+      "title": "Caldera base map",
+      "source": "scripts/spatial_geological_structures_axial_seamount.pdf",
+      "page": 1,
+      "width": 1800,
+      "caption": "Desaturated bathymetry with the six stations and no seismicity overlay. Note: despite the generating script's title, this base map carries no fault or structural overlays — it is the clean canvas those would be annotated onto.",
+      "quality": 80
+    },
+    {
+      "id": "data-allcols-1",
+      "tab": "data",
+      "title": "Measurement distributions (1/5)",
+      "source": "scripts/histograms_all_columns_newdata_combined.pdf",
+      "page": 1,
+      "badge": [
+        "pre_windowcheck",
+        "partial_stations"
+      ],
+      "caption": "Distributions of every numeric output column: φ, δt, their errors, Q_w, SNR, rectilinearity, incidence, dominant period, and the per-event chosen filter band."
+    },
+    {
+      "id": "data-allcols-2",
+      "tab": "data",
+      "title": "Measurement distributions (2/5)",
+      "source": "scripts/histograms_all_columns_newdata_combined.pdf",
+      "page": 2,
+      "badge": [
+        "pre_windowcheck",
+        "partial_stations"
+      ]
+    },
+    {
+      "id": "data-allcols-3",
+      "tab": "data",
+      "title": "Measurement distributions (3/5)",
+      "source": "scripts/histograms_all_columns_newdata_combined.pdf",
+      "page": 3,
+      "badge": [
+        "pre_windowcheck",
+        "partial_stations"
+      ]
+    },
+    {
+      "id": "data-allcols-4",
+      "tab": "data",
+      "title": "Measurement distributions (4/5)",
+      "source": "scripts/histograms_all_columns_newdata_combined.pdf",
+      "page": 4,
+      "badge": [
+        "pre_windowcheck",
+        "partial_stations"
+      ]
+    },
+    {
+      "id": "data-allcols-5",
+      "tab": "data",
+      "title": "Measurement distributions (5/5)",
+      "source": "scripts/histograms_all_columns_newdata_combined.pdf",
+      "page": 5,
+      "badge": [
+        "pre_windowcheck",
+        "partial_stations"
+      ]
+    },
+    {
+      "id": "data-qw-depth",
+      "tab": "data",
+      "title": "Quality vs. source depth",
+      "source": "lqt_pykonal_combined_results/lqt_pykonal_quality_vs_metric_histograms_by_station.pdf",
+      "page": 1,
+      "width": 1900,
+      "badge": [
+        "pre_windowcheck"
+      ],
+      "caption": "Log-count 2-D histograms of Q_w against source depth, one panel per station. No Q_w cut applied — Q_w is the axis."
+    },
+    {
+      "id": "data-qw-dt",
+      "tab": "data",
+      "title": "Quality vs. delay time",
+      "source": "lqt_pykonal_combined_results/lqt_pykonal_quality_vs_metric_histograms_by_station.pdf",
+      "page": 2,
+      "width": 1900,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-qw-phi",
+      "tab": "data",
+      "title": "Quality vs. fast direction",
+      "source": "lqt_pykonal_combined_results/lqt_pykonal_quality_vs_metric_histograms_by_station.pdf",
+      "page": 3,
+      "width": 1900,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-baz-axas1",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXAS1",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 1,
+      "badge": [
+        "pre_windowcheck"
+      ],
+      "caption": "Back-azimuth against source depth and against Q_w. Baseline cleanup only, so the full Q_w < 0 null population stays visible — this is the panel that tests the Wüstefeld (2010) prediction that true nulls cluster at discrete back-azimuths while false nulls scatter."
+    },
+    {
+      "id": "data-baz-axas2",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXAS2",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 2,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-baz-axcc1",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXCC1",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 3,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-baz-axec1",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXEC1",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 4,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-baz-axec2",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXEC2",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 5,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "data-baz-axec3",
+      "tab": "data",
+      "title": "Back-azimuth, depth & quality — AXEC3",
+      "source": "lqt_pykonal_combined_results/back_azimuth_depth_quality_histograms.pdf",
+      "page": 6,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "methods-pipeline",
+      "tab": "methods",
+      "title": "Splitting measurement pipeline",
+      "source": "splitting_pipeline_figure.svg",
+      "copy_as_is": true,
+      "caption": "End-to-end workflow: waveform retrieval and QC, dominant-period estimation, MFAST-style dynamic windowing, LQT rotation on the PyKonal-traced S incidence, Silver & Chan eigenvalue minimisation over the window/lag/angle grid, and DBSCAN clustering with Teanby (2004) representative-variance selection."
+    },
+    {
+      "id": "methods-clean-split",
+      "tab": "methods",
+      "title": "A well-constrained split",
+      "source": "scripts/figure_axec2_mfast_event_74456_hq_diagnostics.pdf",
+      "page": 7,
+      "caption": "AXEC2, event 298_74456, 2015-04-21. Q_w = 1.000, SNR = 23.3, rectilinearity = 0.999, incidence = 14.6°, φ_err = 7°, δt = 0.03 ± 0.005 s. The highest-ranked measurement across all 497 pre-eruption batches."
+    },
+    {
+      "id": "methods-null",
+      "tab": "methods",
+      "title": "A well-constrained null",
+      "source": "scripts/figure_axec2_mfast_event_18279_null_diagnostics.pdf",
+      "page": 7,
+      "caption": "AXEC2, event 74_18279, 2015-03-02. Q_w = −0.984, at the discretised floor — the most confident 'no splitting' the metric can express. δt = 0.01 s with δt_err = 0.005 s, so the null is not confounded by a noisy measurement."
+    },
+    {
+      "id": "methods-cycleskip",
+      "tab": "methods",
+      "title": "Cycle skipping",
+      "source": "scripts/figure_axec2_mfast_event_59346_cycleskip_diagnostics.pdf",
+      "page": 5,
+      "caption": "AXEC2, event 238_59346, 2015-04-06. Q_w = 0.000 (indeterminate), δt = 0.16 s against T_dom/2 = 0.0345 s — 4.6× over threshold, with a broad non-unique error-surface minimum. This is the case that motivates the δt ≤ T_dom/2 cut in the Grade-3 filter."
+    },
+    {
+      "id": "rose-7period-hero",
+      "tab": "results",
+      "group": "rose",
+      "featured": true,
+      "title": "Fast direction by eruption-relative period",
+      "source": "scripts/rose_7period_regions_windowcheck_grade3.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "Six station rows × seven periods (before, during, and five equal-event-count post-eruption bins), grouped by western and eastern caldera. Each panel carries N, mean φ ± SE, and the axial cosine similarity to that station's pre-eruption panel."
+    },
+    {
+      "id": "rose-7period-ccal",
+      "tab": "results",
+      "group": "rose",
+      "title": "Fast direction by equal-inflation period",
+      "source": "scripts/rose_7period_regions_windowcheck_grade3_ccal_periods.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "The same figure with the five post-eruption bins carrying equal amounts of Central Caldera inflation rather than equal event counts — the physically motivated companion, and the newest of the rose set."
+    },
+    {
+      "id": "rose-annual",
+      "tab": "results",
+      "group": "rose",
+      "title": "Fast direction by year",
+      "source": "scripts/rose_annual_regions_windowcheck_grade3.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "Fourteen annual columns: pre-2015, syn-2015, post-2015, then 2016 through 2026."
+    },
+    {
+      "id": "rose-baz-7period",
+      "tab": "results",
+      "group": "rose",
+      "title": "Back-azimuth decomposition, by period",
+      "source": "scripts/rose_7period_windowcheck_grade3_baz_ring.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "Each cell's central rose ringed by six 60° back-azimuth sub-roses, testing whether the fast direction is a back-azimuth sampling artefact rather than a property of the medium."
+    },
+    {
+      "id": "rose-baz-annual",
+      "tab": "results",
+      "group": "rose",
+      "title": "Back-azimuth decomposition, by year",
+      "source": "scripts/rose_annual_windowcheck_grade3_baz_ring.pdf",
+      "page": 1,
+      "width": 2400
+    },
+    {
+      "id": "rose-axas1",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXAS1 — equal-inflation periods",
+      "source": "scripts/rose_axas1_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1,
+      "caption": "Western caldera (ASHES). Post-eruption bins carry equal physical inflation. AXAS1 and AXAS2 reference the ASHES BOTPT, whose record begins 2017-08-15."
+    },
+    {
+      "id": "rose-axas2",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXAS2 — equal-inflation periods",
+      "source": "scripts/rose_axas2_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1
+    },
+    {
+      "id": "rose-axcc1",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXCC1 — equal-inflation periods",
+      "source": "scripts/rose_axcc1_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1,
+      "caption": "Central caldera. No real data exists 2015-03-01 to 2015-04-28 — the sensor was unlevelled by pre-eruption inflation and reset after eruption onset."
+    },
+    {
+      "id": "rose-axec1",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXEC1 — equal-inflation periods",
+      "source": "scripts/rose_axec1_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1
+    },
+    {
+      "id": "rose-axec2",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXEC2 — equal-inflation periods",
+      "source": "scripts/rose_axec2_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1
+    },
+    {
+      "id": "rose-axec3",
+      "tab": "results",
+      "group": "rose",
+      "title": "AXEC3 — equal-inflation periods",
+      "source": "scripts/rose_axec3_windowcheck_grade3_inflation_periods.pdf",
+      "page": 1
+    },
+    {
+      "id": "geo-atan2-axas1",
+      "tab": "results",
+      "group": "geodetic",
+      "featured": true,
+      "title": "Uplift vs. fast direction — AXAS1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 1,
+      "caption": "φ against Central Caldera uplift, matched 30-day rolling windows on both axes, fitted with the atan2 vector-sum model: a fixed regional tectonic stress vector plus a fixed-orientation inflation vector whose magnitude grows with uplift. Turnover u0 is auto-estimated per station by a free-location logistic pre-fit."
+    },
+    {
+      "id": "geo-atan2-axas2",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. fast direction — AXAS2",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 2
+    },
+    {
+      "id": "geo-atan2-axcc1",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. fast direction — AXCC1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 3,
+      "caption": "AXCC1's fit returns A ≈ 42 against 0.4–20 at every other station, producing a near-discontinuous rather than smooth transition. Treat this fit, and the AXCC1 arrow on the inflation-vector map, with more caution than the other five."
+    },
+    {
+      "id": "geo-atan2-axec1",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. fast direction — AXEC1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 4
+    },
+    {
+      "id": "geo-atan2-axec2",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. fast direction — AXEC2",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 5
+    },
+    {
+      "id": "geo-atan2-axec3",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. fast direction — AXEC3",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_30day.pdf",
+      "page": 6
+    },
+    {
+      "id": "geo-inflation-map",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Fitted inflation-vector azimuths",
+      "source": "scripts/inflation_vector_map_sixstations_ccal.pdf",
+      "page": 1,
+      "width": 1800,
+      "caption": "Grayscale bathymetry with each station's fitted inflation-vector azimuth β as a red arrow. Reuses compute_all_station_fits() from the fit above, so the map cannot drift from the fits. AXCC1's arrow inherits the caveat noted on its panel.",
+      "quality": 82
+    },
+    {
+      "id": "geo-nofit-axas1",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXAS1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 1,
+      "caption": "The deliberate no-fit view: pre-eruption deflation and post-eruption re-inflation as two panels pivoting at zero uplift, 90-day windows. Complementary to the fitted version, not superseded by it."
+    },
+    {
+      "id": "geo-nofit-axas2",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXAS2",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 2
+    },
+    {
+      "id": "geo-nofit-axcc1",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXCC1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 3
+    },
+    {
+      "id": "geo-nofit-axec1",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXEC1",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 4
+    },
+    {
+      "id": "geo-nofit-axec2",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXEC2",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 5
+    },
+    {
+      "id": "geo-nofit-axec3",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Uplift vs. φ, unfitted — AXEC3",
+      "source": "scripts/atan2_uplift_vs_phi_sixstations_ccal_90day_full_nofit.pdf",
+      "page": 6
+    },
+    {
+      "id": "geo-bpr-ccal",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "Central Caldera BOTPT — de-tided depth and uplift",
+      "source": "scripts/bpr_detided_depth_and_inflation_ccal.pdf",
+      "page": 1,
+      "caption": "De-tided seafloor depth 2015-01-22 to 2026-05-15, and metres of uplift referenced to the post-eruption minimum, with the five equal-inflation period boundaries marked. Total re-inflation ≈ 2.6 m."
+    },
+    {
+      "id": "geo-bpr-ashes",
+      "tab": "results",
+      "group": "geodetic",
+      "title": "ASHES BOTPT — de-tided depth and uplift",
+      "source": "scripts/bpr_detided_depth_and_inflation_ashes.pdf",
+      "page": 1,
+      "caption": "The western-caldera geodetic reference used by AXAS1 and AXAS2. Record begins 2017-08-15."
+    },
+    {
+      "id": "delay-ec2-multipanel",
+      "tab": "results",
+      "group": "delay",
+      "featured": true,
+      "title": "Delay time through the eruption — AXEC2",
+      "source": "scripts/figure_ec2_multipanel_temporal_mfast.pdf",
+      "page": 1,
+      "width": 2400,
+      "badge": [
+        "pre_windowcheck"
+      ],
+      "caption": "δt as a moving-window density against time, with a ±48 h eruption zoom. Filtered Q_w > 0.5, φ_err < 20°, δt_err < 0.04 s. No Grade-3 equivalent of this figure exists yet — see the note below."
+    },
+    {
+      "id": "delay-depth-axas1",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXAS1",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 1,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "delay-depth-axas2",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXAS2",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 2,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "delay-depth-axcc1",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXCC1",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 3,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "delay-depth-axec1",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXEC1",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 4,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "delay-depth-axec2",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXEC2",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 5,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "delay-depth-axec3",
+      "tab": "results",
+      "group": "delay",
+      "title": "Delay time vs. source depth — AXEC3",
+      "source": "scripts/dt_vs_depth_per_station_newdata_snr2_q75.pdf",
+      "page": 6,
+      "badge": [
+        "pre_windowcheck"
+      ]
+    },
+    {
+      "id": "aniso-spatial-frac",
+      "tab": "results",
+      "group": "anisotropy",
+      "featured": true,
+      "title": "Fractional anisotropy across the caldera",
+      "source": "scripts/spatial_midpoint_fractional_anisotropy_windowcheck_grade3_7period_1row_countmin10.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "All six stations pooled, each measurement assigned to its ray's arc-length lateral midpoint on a 0.25 × 0.25 km grid, minimum 10 measurements per cell, one row × seven periods. Fractional anisotropy solved from a² + 2xa − 4 = 0 with x = 2·T_travel/δt. Note that AXEC2's 2015–2021 half lacks event coordinates, so only its 2022–2026 data contributes."
+    },
+    {
+      "id": "aniso-spatial-phi",
+      "tab": "results",
+      "group": "anisotropy",
+      "title": "Fast direction across the caldera",
+      "source": "scripts/spatial_midpoint_phi_quiver_windowcheck_grade3_7period_1row_countmin10.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "The fast-direction quiver companion to the panel above, on the same grid and periods."
+    },
+    {
+      "id": "aniso-temporal-pct",
+      "tab": "results",
+      "group": "anisotropy",
+      "title": "Percent anisotropy through time — AXEC3",
+      "source": "scripts/figure_ec3_multipanel_temporal_mfast_windowcheck_grade3.pdf",
+      "page": 1,
+      "width": 2200,
+      "caption": "φ against time in 21-day windows with a ±24 h eruption zoom, and δt/T_travel × 100 against time."
+    },
+    {
+      "id": "aniso-temporal-frac",
+      "tab": "results",
+      "group": "anisotropy",
+      "title": "Fractional anisotropy through time — AXEC3",
+      "source": "scripts/figure_ec3_multipanel_temporal_mfast_windowcheck_grade3.pdf",
+      "page": 2,
+      "width": 2200
+    },
+    {
+      "id": "inv-strength",
+      "tab": "results",
+      "group": "inversion",
+      "featured": true,
+      "title": "Inverted anisotropy strength",
+      "source": "scripts/sws_tomography_johnson2011_windowcheck_grade3_ccal_periods_strength.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "Joint six-station 2-D inversion, one row × seven equal-inflation periods. Quad-tree blocks to a 0.25 km minimum, d = Gm with δt_r = Σ s_b L_rb, Sherman–Morrison covariance whitening, bounded weighted least squares. Blocks failing checkerboard recovery are greyed and hatched."
+    },
+    {
+      "id": "inv-phi",
+      "tab": "results",
+      "group": "inversion",
+      "title": "Inverted fast direction",
+      "source": "scripts/sws_tomography_johnson2011_windowcheck_grade3_ccal_periods_phi_quiver.pdf",
+      "page": 1,
+      "width": 2400,
+      "caption": "Per-block fast polarisation from the same inversion, averaged in doubled-angle space."
+    },
+    {
+      "id": "inv-checkerboard",
+      "tab": "results",
+      "group": "inversion",
+      "title": "Checkerboard resolution test",
+      "source": "sws_tomography_johnson2011_results/JOINT6_combined_q0.7_checkerboard.png",
+      "copy_as_is": false,
+      "width": 1900,
+      "badge": [
+        "older_inversion"
+      ],
+      "caption": "Input against recovered checkerboard, λ = 1 km, joint six-station, Q_w ≥ 0.7. From the July 2026 run — the Grade-3 inversion produced strength and quiver output but no checkerboard, so this stands in until that is regenerated."
+    },
+    {
+      "id": "inv-phi-rose",
+      "tab": "results",
+      "group": "inversion",
+      "title": "Inverted fast direction — block roses",
+      "source": "sws_tomography_johnson2011_results/JOINT6_combined_q0.7_phi_rose.png",
+      "width": 1900,
+      "badge": [
+        "older_inversion"
+      ]
+    },
+    {
+      "id": "inv-dt-strength",
+      "tab": "results",
+      "group": "inversion",
+      "title": "Recovered strength — combined epoch",
+      "source": "sws_tomography_johnson2011_results/JOINT6_combined_q0.7_dt_strength.png",
+      "width": 1900,
+      "badge": [
+        "older_inversion"
+      ]
+    }
+  ]
+}

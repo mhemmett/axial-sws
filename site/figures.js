@@ -33,6 +33,18 @@ window.AXIAL_FIGURE_META = {
 
 window.AXIAL_FIGURES = [
   {
+    "id": "context-structures",
+    "tab": "overview",
+    "group": null,
+    "title": "Geological structure of Axial Seamount",
+    "caption": "Caldera setting over shaded bathymetry. White dotted line: outline of the main magma reservoir (MMR); orange and red contours: the MMR roof at 1.5 km and 1.25 km depth. Hatched grey polygons: the east and west ring faults. Black lines: rift zones and dikes, running north and south from the caldera. Green outlines: the 2015 lava flows. Stations are coloured by instrument — yellow for short-period (AS1, AS2, EC1, EC3), blue for broadband (CC1, EC2). The Pacific–Juan de Fuca plate boundary runs through the caldera.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/overview/context-structures.webp",
+    "width": 1500,
+    "height": 2435
+  },
+  {
     "id": "context-seismicity",
     "tab": "overview",
     "group": null,
@@ -41,18 +53,6 @@ window.AXIAL_FIGURES = [
     "badge": [],
     "featured": false,
     "src": "assets/figures/overview/context-seismicity.webp",
-    "width": 1800,
-    "height": 2562
-  },
-  {
-    "id": "context-basemap",
-    "tab": "overview",
-    "group": null,
-    "title": "Caldera base map",
-    "caption": "Desaturated bathymetry with the six stations and no seismicity overlay. Note: despite the generating script's title, this base map carries no fault or structural overlays — it is the clean canvas those would be annotated onto.",
-    "badge": [],
-    "featured": false,
-    "src": "assets/figures/overview/context-basemap.webp",
     "width": 1800,
     "height": 2562
   },

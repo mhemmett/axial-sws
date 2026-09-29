@@ -1,0 +1,62 @@
+# Deploy the hand-written static site in site/ to GitHub Pages.
+#
+# ONE-TIME MANUAL STEP — this workflow does NOT enable Pages by itself:
+#   Repo Settings -> Pages -> "Build and deployment" -> Source: "GitHub Actions".
+# Until that is set once by hand, every run here fails at "Setup Pages" with
+# "Get Pages site failed". After it is set, the site is live at
+#   https://mhemmett.github.io/axial-sws/
+#
+# Action versions are GitHub's own starter workflow set
+# (actions/starter-workflows -> pages/static.yml), which is a known-compatible
+# combination. Newer majors exist (checkout v7, configure-pages v6,
+# upload-pages-artifact v5); if you bump upload-pages-artifact past v3 you MUST add
+#   with: { include-hidden-files: true }
+# or site/.nojekyll (a dotfile) will be silently dropped from the artifact.
+
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  # Lets you deploy by hand from the Actions tab (e.g. the very first deploy, or
+  # after flipping the Settings -> Pages switch above).
+  workflow_dispatch:
+
+# Least privilege needed to publish: read the repo, write a Pages deployment, and
+# mint the OIDC token deploy-pages uses to prove the run's identity.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queued runs collapse to the newest, but an in-flight
+# deploy is never cancelled half-way.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Only site/ is published; the rest of the research repo is not served.
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

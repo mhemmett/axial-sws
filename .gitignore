@@ -75,3 +75,23 @@ swspy/docs/build/
 
 # OS cruft
 .DS_Store
+
+# GitHub Pages site (site/) - everything served at
+# https://mhemmett.github.io/axial-sws/ must be tracked, so re-include the whole
+# site/ tree. Two of the blanket rules above would otherwise swallow parts of it:
+#   * `results/` (near the top) has no leading slash, so it matches ANY directory
+#     named `results` at any depth - including the site's own tab directory
+#     site/assets/figures/results/. Git does not descend into an excluded
+#     directory, so the directory itself has to be re-included before any file
+#     inside it can be; `!site/**` matches the directory too, which is what makes
+#     this work.
+#   * `*.png` / `*.pdf` / `*.jpg` / `*.jpeg` / `*.gif` would hide any raster asset
+#     dropped under site/. (The rendered figures are .webp plus one .svg, neither
+#     of which is ignored today - negating the whole tree keeps that from ever
+#     mattering.)
+!site/
+!site/**
+
+# ...but still never track build/OS cruft that lands inside site/.
+site/**/__pycache__/
+site/**/.DS_Store

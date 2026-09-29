@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Axial SWS</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230055cc'/%3E%3Cg stroke='%23fff' stroke-width='2.6' stroke-linecap='round'%3E%3Cline x1='16' y1='5' x2='16' y2='27'/%3E%3Cline x1='6.5' y1='10.5' x2='25.5' y2='21.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  /* ═══ TOKENS ═══ adapted from aRCADA's light theme (arcada/index.html:11-29).
+     --teal renamed to --accent (it is blue); --amber/--amber-dim dropped as dead. */
+  :root {
+    --bg: #f5f7fb;
+    --bg2: #edf1f8;
+    --bg3: #e4ebf5;
+    --surface: #ffffff;
+    --surface2: #f0f4fb;
+    --accent: #0055cc;
+    --accent-dim: #1a6ddd;
+    --accent-deep: #003da5;
+    --accent-glow: rgba(0,85,204,0.10);
+    --accent-glow2: rgba(0,85,204,0.05);
+    --text: #0a1a3a;
+    --text2: #2a4070;
+    --text3: #7090b8;
+    --border: rgba(0,85,204,0.22);
+    --border2: rgba(0,85,204,0.10);
+    --warn: #8a4000;
+    --warn-bg: rgba(140,70,0,0.10);
+    --red: #cc2222;
+    --nav-bg: rgba(245,247,251,0.95);
+    --gate-bg: rgba(245,247,251,0.97);
+    --overlay-bg: rgba(10,26,58,0.88);
+    --radius: 6px;
+    --radius-lg: 12px;
+    --font-ui: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'Fraunces', serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    overflow-x: hidden;
+  }
+  body.locked { overflow: hidden; }
+  body.locked main, body.locked nav, body.locked footer { filter: blur(3px); pointer-events: none; }
+
+  /* ═══ PASSWORD GATE ═══ styling lifted from arcada/chat/chat.css:623-686
+     (which defined the component but never wired any logic to it). */
+  .password-gate {
+    position: fixed; inset: 0;
+    background: var(--gate-bg);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 600;
+    backdrop-filter: blur(6px);
+    padding: 1.5rem;
+  }
+  .password-gate[hidden] { display: none; }
+  .password-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    max-width: 400px; width: 100%;
+  }
+  .password-card-title {
+    font-family: var(--font-ui); font-weight: 800;
+    font-size: 1.25rem; color: var(--text);
+    letter-spacing: -0.01em; margin-bottom: 0.35rem;
+  }
+  .password-card-title .accent { color: var(--accent); }
+  .password-card-sub {
+    font-size: 0.78rem; color: var(--text2);
+    margin-bottom: 1.25rem; line-height: 1.6;
+  }
+  .password-row { display: flex; gap: 0.5rem; }
+  .password-input {
+    flex: 1; min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-mono); font-size: 0.88rem;
+    padding: 0.6rem 0.9rem; outline: none;
+    transition: border-color 0.15s;
+  }
+  .password-input:focus { border-color: var(--accent); }
+  .password-submit {
+    background: var(--accent); color: #fff; border: none;
+    border-radius: var(--radius); padding: 0.6rem 1.1rem;
+    font-family: var(--font-ui); font-weight: 700; font-size: 0.8rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .password-submit:hover { background: var(--accent-deep); }
+  .password-error { margin-top: 0.7rem; font-size: 0.76rem; color: var(--red); }
+  .password-error[hidden] { display: none; }
+  .password-note {
+    margin-top: 1.25rem; padding-top: 1rem;
+    border-top: 1px solid var(--border2);
+    font-size: 0.66rem; line-height: 1.7; color: var(--text3);
+  }
+
+  /* ═══ NAV ═══ arcada/index.html:54-111 */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1rem 2.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1.5rem;
+    border-bottom: 1px solid var(--border2);
+    background: var(--nav-bg);
+    backdrop-filter: blur(12px);
+  }
+  .nav-logo {
+    font-family: var(--font-ui); font-weight: 800; font-size: 1.05rem;
+    letter-spacing: -0.01em; color: var(--text);
+    text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  }
+  .nav-logo .accent { color: var(--accent); }
+  .nav-updated {
+    color: var(--text3); font-weight: 400; font-size: 0.7rem;
+    letter-spacing: 0.05em; margin-left: 0.5rem;
+    font-family: var(--font-mono);
+  }
+
+  /* ═══ TABS ═══ arcada/chat/chat.css:902-928 (.mode-bar / .mode-btn) ═══ */
+  .tab-bar {
+    display: flex; gap: 0.4rem;
+    overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .tab-bar::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    padding: 0.32rem 0.95rem;
+    border-radius: 99px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer; white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .subtab-bar {
+    display: flex; gap: 0.4rem; flex-wrap: wrap;
+    padding-bottom: 1.25rem;
+    margin-top: 2.5rem; margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  /* ═══ LAYOUT ═══ arcada/index.html:321-330 */
+  main { padding-top: 62px; }
+  section { padding: 4.5rem 2rem 6rem; }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  .hero { padding: 5rem 2rem 3rem; border-bottom: 1px solid var(--border2); background: var(--bg2); }
+  .hero-title {
+    font-family: var(--font-ui); font-weight: 800;
+    font-size: clamp(2.2rem, 6vw, 3.6rem);
+    line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 0.9rem;
+  }
+  .hero-title .accent { color: var(--accent); }
+  .hero-tagline {
+    font-family: var(--font-body); font-style: italic; font-weight: 300;
+    font-size: clamp(0.95rem, 2vw, 1.2rem); color: var(--text2);
+    max-width: 640px; line-height: 1.6;
+  }
+
+  .section-label {
+    font-size: 0.65rem; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-label::before { content: ''; display: block; width: 24px; height: 1px; background: var(--accent); }
+  .section-title {
+    font-family: var(--font-ui); font-weight: 700;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    line-height: 1.1; margin-bottom: 1.25rem;
+  }
+  .lead {
+    font-family: var(--font-body); font-weight: 300;
+    font-size: 1.12rem; line-height: 1.75; color: var(--text);
+    max-width: 720px; margin-bottom: 1.75rem;
+  }
+  .prose { max-width: 720px; }
+  .prose p {
+    font-family: var(--font-body); font-weight: 300;
+    font-size: 1.02rem; line-height: 1.85; color: var(--text2);
+    margin-bottom: 1.2rem;
+  }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong { font-weight: 400; color: var(--text); font-family: var(--font-mono); font-size: 0.9em; }
+  .prose em { font-style: italic; }
+  .prose ul { margin: 0 0 1.2rem 1.2rem; }
+  .prose li {
+    font-family: var(--font-body); font-weight: 300;
+    font-size: 1.02rem; line-height: 1.8; color: var(--text2); margin-bottom: 0.4rem;
+  }
+  .prose code {
+    font-family: var(--font-mono); font-size: 0.82em;
+    background: var(--bg3); padding: 1px 5px; color: var(--text);
+  }
+
+  /* ═══ CALLOUT ═══ */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--surface); border-top: 1px solid var(--border2);
+    border-right: 1px solid var(--border2); border-bottom: 1px solid var(--border2);
+    padding: 1.1rem 1.35rem; margin: 2rem 0; max-width: 720px;
+  }
+  .callout p { font-size: 0.78rem; line-height: 1.75; color: var(--text2); font-family: var(--font-mono); }
+  .callout p + p { margin-top: 0.7rem; }
+  .callout strong { color: var(--text); }
+
+  /* ═══ FIGURES ═══ arcada/blog/index.html:215-240 */
+  .fig-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem; margin-top: 2.5rem;
+    align-items: start;   /* cards size to their own content, not the tallest in the row */
+  }
+  .figure {
+    border: 1px solid var(--border2); background: var(--surface);
+    overflow: hidden; position: relative;
+    transition: border-color 0.25s, transform 0.25s;
+    display: flex; flex-direction: column;
+  }
+  .figure:hover { border-color: var(--border); transform: translateY(-2px); }
+  .figure.featured { grid-column: 1 / -1; }
+  .figure-imgwrap {
+    background: #fff; cursor: zoom-in;
+    display: block; line-height: 0;
+  }
+  .figure img { width: 100%; height: auto; display: block; }
+  .figure-body { padding: 0.85rem 1.1rem; border-top: 1px solid var(--border2); }
+  .figure-title {
+    font-family: var(--font-ui); font-weight: 700; font-size: 0.85rem;
+    letter-spacing: 0.02em; color: var(--text); margin-bottom: 0.4rem;
+    display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap;
+  }
+  .figure-caption {
+    font-size: 0.68rem; color: var(--text3);
+    letter-spacing: 0.03em; line-height: 1.65; font-family: var(--font-mono);
+  }
+
+  /* outlined pill — arcada/index.html:563-572 */
+  .badge {
+    display: inline-block; flex-shrink: 0;
+    font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 2px 7px; border: 1px solid var(--border2);
+    color: var(--text3); font-family: var(--font-mono); font-weight: 400;
+    cursor: help;
+  }
+  .badge.warn { color: var(--warn); border-color: rgba(140,70,0,0.3); background: var(--warn-bg); }
+
+  /* ═══ LIGHTBOX ═══ */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 500;
+    background: var(--overlay-bg);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem; cursor: zoom-out;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox img {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain; background: #fff;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .lightbox-close {
+    position: absolute; top: 1.25rem; right: 1.5rem;
+    background: none; border: 1px solid rgba(255,255,255,0.4); color: #fff;
+    font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.1em;
+    padding: 0.4rem 0.8rem; cursor: pointer; text-transform: uppercase;
+  }
+  .lightbox-close:hover { border-color: #fff; }
+
+  /* ═══ EMPTY STATE ═══ */
+  .empty {
+    border: 1px dashed var(--border); background: var(--surface2);
+    padding: 3rem 2rem; text-align: center; margin-top: 2.5rem;
+  }
+  .empty-title {
+    font-family: var(--font-ui); font-weight: 700; font-size: 0.95rem;
+    color: var(--text2); margin-bottom: 0.5rem;
+  }
+  .empty-sub { font-size: 0.72rem; color: var(--text3); line-height: 1.7; max-width: 460px; margin: 0 auto; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ═══ REVEAL ═══ arcada/index.html:1771-1785 */
+  .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s, transform 0.5s; }
+  .reveal.visible { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ═══ FOOTER ═══ arcada/index.html:1090-1125, with flex-wrap:gap bug fixed */
+  footer {
+    padding: 2.5rem 2rem; border-top: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-logo {
+    font-family: var(--font-ui); font-weight: 800; font-size: 0.9rem;
+    letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase;
+  }
+  .footer-note { font-size: 0.62rem; letter-spacing: 0.08em; color: var(--text3); line-height: 1.7; }
+
+  /* ═══ RESPONSIVE ═══ aRCADA hid nav entirely at 768px with no replacement;
+     here the tab bar stays reachable and scrolls horizontally instead. */
+  @media (max-width: 900px) {
+    .fig-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    nav { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.75rem; }
+    .nav-logo { font-size: 0.95rem; }
+    .nav-updated { display: none; }
+    main { padding-top: 96px; }
+    section { padding: 3rem 1.25rem 4rem; }
+    .hero { padding: 3rem 1.25rem 2rem; }
+    .lightbox { padding: 0.75rem; }
+  }
+</style>
+</head>
+
+<!-- Password gate -->
+<div class="password-gate" id="gate">
+  <div class="password-card">
+    <div class="password-card-title"><span class="accent">Axial</span> SWS</div>
+    <div class="password-card-sub">Working figures and notes for the Axial Seamount shear-wave-splitting study. Enter the project password to continue.</div>
+    <form class="password-row" id="gateForm">
+      <input class="password-input" type="password" id="gateInput" placeholder="password"
+             autocomplete="current-password" aria-label="Project password" autofocus>
+      <button class="password-submit" type="submit">Enter</button>
+    </form>
+    <div class="password-error" id="gateError" hidden>Incorrect password.</div>
+    <div class="password-note">
+      This gate is client-side only and this repository is public &mdash; it keeps out casual visitors
+      and search engines, nothing more. No unpublished manuscript text is hosted here.
+    </div>
+  </div>
+</div>
+
+<nav>
+  <a class="nav-logo" href="#overview"><span class="accent">Axial</span> SWS<span class="nav-updated" id="navUpdated"></span></a>
+  <div class="tab-bar" id="tabBar"></div>
+</nav>
+
+<main>
+  <header class="hero">
+    <div class="container">
+      <h1 class="hero-title" id="heroTitle"></h1>
+      <p class="hero-tagline" id="heroTagline"></p>
+    </div>
+  </header>
+
+  <section>
+    <div class="container" id="panels"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-logo">Axial SWS</div>
+  <div class="footer-note" id="footerNote"></div>
+</footer>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" id="lightboxClose">Close &times;</button>
+  <img id="lightboxImg" alt="">
+</div>
+
+<script src="content.js"></script>
+<script src="figures.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  var PASSWORD = 'axial';
+  var STORAGE_KEY = 'axial-sws-unlocked';
+
+  var CONTENT = window.AXIAL_CONTENT || {};
+  var FIGURES = window.AXIAL_FIGURES || [];
+  var META    = window.AXIAL_FIGURE_META || { badges: {}, groups: {} };
+
+  var TAB_ORDER = ['overview', 'data', 'methods', 'results', 'manuscript'];
+  var GROUP_ORDER = ['rose', 'geodetic', 'delay', 'anisotropy', 'inversion'];
+
+  // ── Password gate ────────────────────────────────────────────────
+  var gate = document.getElementById('gate');
+  var gateForm = document.getElementById('gateForm');
+  var gateInput = document.getElementById('gateInput');
+  var gateError = document.getElementById('gateError');
+
+  function unlock() {
+    gate.hidden = true;
+    document.body.classList.remove('locked');
+    try { sessionStorage.setItem(STORAGE_KEY, '1'); } catch (e) { /* private mode */ }
+  }
+
+  function alreadyUnlocked() {
+    try { return sessionStorage.getItem(STORAGE_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  if (alreadyUnlocked()) {
+    gate.hidden = true;
+  } else {
+    document.body.classList.add('locked');
+  }
+
+  gateForm.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (gateInput.value.trim().toLowerCase() === PASSWORD) {
+      gateError.hidden = true;
+      unlock();
+    } else {
+      gateError.hidden = false;
+      gateInput.select();
+    }
+  });
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+
+  function tabLabel(key) {
+    var t = (CONTENT.tabs || {})[key];
+    return (t && t.label) || key.charAt(0).toUpperCase() + key.slice(1);
+  }
+
+  function badgeNodes(ids) {
+    var frag = document.createDocumentFragment();
+    (ids || []).forEach(function (bid) {
+      var def = META.badges[bid];
+      if (!def) return;
+      var b = el('span', 'badge ' + (def.tone === 'warn' ? 'warn' : ''), def.label);
+      if (def.tooltip) b.title = def.tooltip;
+      frag.appendChild(b);
+    });
+    return frag;
+  }
+
+  function figureNode(f) {
+    var fig = el('figure', 'figure reveal' + (f.featured ? ' featured' : ''));
+
+    var wrap = el('a', 'figure-imgwrap');
+    wrap.href = f.src;
+    wrap.addEventListener('click', function (ev) { ev.preventDefault(); openLightbox(f); });
+
+    var img = el('img');
+    img.src = f.src;
+    img.alt = f.title || f.id;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    if (f.width && f.height) { img.width = f.width; img.height = f.height; }
+    wrap.appendChild(img);
+    fig.appendChild(wrap);
+
+    var body = el('figcaption', 'figure-body');
+    var title = el('div', 'figure-title');
+    title.appendChild(document.createTextNode(f.title || f.id));
+    title.appendChild(badgeNodes(f.badge));
+    body.appendChild(title);
+    if (f.caption) body.appendChild(el('div', 'figure-caption', f.caption));
+    fig.appendChild(body);
+
+    return fig;
+  }
+
+  function figuresFor(tab, group) {
+    return FIGURES.filter(function (f) {
+      return f.tab === tab && (group ? f.group === group : true);
+    });
+  }
+
+  function gridOf(figs) {
+    var grid = el('div', 'fig-grid');
+    figs.forEach(function (f) { grid.appendChild(figureNode(f)); });
+    return grid;
+  }
+
+  function emptyState(title, sub) {
+    var box = el('div', 'empty');
+    box.appendChild(el('div', 'empty-title', title));
+    box.appendChild(el('div', 'empty-sub', sub));
+    return box;
+  }
+
+  // ── Lightbox ─────────────────────────────────────────────────────
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightboxImg');
+
+  function openLightbox(f) {
+    lightboxImg.src = f.src;
+    lightboxImg.alt = f.title || f.id;
+    lightbox.hidden = false;
+  }
+  function closeLightbox() { lightbox.hidden = true; lightboxImg.src = ''; }
+
+  lightbox.addEventListener('click', closeLightbox);
+  document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && !lightbox.hidden) closeLightbox();
+  });
+
+  // ── Build panels ─────────────────────────────────────────────────
+  var panelsRoot = document.getElementById('panels');
+  var activeGroup = GROUP_ORDER[0];
+
+  function buildPanel(key) {
+    var panel = el('section', 'panel');
+    panel.id = 'panel-' + key;
+    panel.dataset.tab = key;
+
+    var c = (CONTENT.tabs || {})[key] || {};
+
+    panel.appendChild(el('div', 'section-label', key));
+    panel.appendChild(el('h2', 'section-title', tabLabel(key)));
+    if (c.lead) panel.appendChild(el('div', 'lead', c.lead));
+    if (c.body) panel.appendChild(el('div', 'prose', c.body));
+
+    if (key === 'results') {
+      var bar = el('div', 'subtab-bar tab-bar');
+      bar.id = 'subtabBar';
+      var host = el('div');
+      host.id = 'resultsHost';
+      panel.appendChild(bar);
+      panel.appendChild(host);
+
+      GROUP_ORDER.forEach(function (g) {
+        var btn = el('button', 'tab-btn', META.groups[g] || g);
+        btn.dataset.group = g;
+        btn.addEventListener('click', function () { setGroup(g); });
+        bar.appendChild(btn);
+      });
+    } else if (key === 'manuscript') {
+      panel.appendChild(emptyState(
+        'No drafts posted yet',
+        'Manuscript drafts are not hosted here. The password gate on this site is client-side only and the repository is public, so pre-publication text does not belong on it until that changes.'
+      ));
+    } else {
+      var figs = figuresFor(key);
+      if (figs.length) panel.appendChild(gridOf(figs));
+    }
+
+    return panel;
+  }
+
+  function setGroup(g) {
+    activeGroup = g;
+    var bar = document.getElementById('subtabBar');
+    var host = document.getElementById('resultsHost');
+    if (!bar || !host) return;
+
+    Array.prototype.forEach.call(bar.children, function (b) {
+      b.classList.toggle('active', b.dataset.group === g);
+    });
+
+    host.innerHTML = '';
+    var intro = (CONTENT.resultGroups || {})[g];
+    if (intro) host.appendChild(el('div', 'prose', intro));
+
+    var figs = figuresFor('results', g);
+    if (figs.length) {
+      host.appendChild(gridOf(figs));
+    } else {
+      host.appendChild(emptyState('No figures in this group yet', 'Add entries to site/figures.json and re-run the figure build.'));
+    }
+    observeReveals(host);
+
+    if (history.replaceState) history.replaceState(null, '', '#results/' + g);
+  }
+
+  // ── Tabs / routing ───────────────────────────────────────────────
+  var tabBar = document.getElementById('tabBar');
+
+  TAB_ORDER.forEach(function (key) {
+    var btn = el('button', 'tab-btn', tabLabel(key));
+    btn.dataset.tab = key;
+    btn.addEventListener('click', function () { go(key, null, true); });
+    tabBar.appendChild(btn);
+    panelsRoot.appendChild(buildPanel(key));
+  });
+
+  function go(tab, group, push) {
+    if (TAB_ORDER.indexOf(tab) === -1) tab = TAB_ORDER[0];
+
+    Array.prototype.forEach.call(tabBar.children, function (b) {
+      b.classList.toggle('active', b.dataset.tab === tab);
+    });
+    Array.prototype.forEach.call(panelsRoot.children, function (p) {
+      p.classList.toggle('active', p.dataset.tab === tab);
+    });
+
+    if (tab === 'results') {
+      setGroup(GROUP_ORDER.indexOf(group) !== -1 ? group : activeGroup);
+    } else if (push && history.replaceState) {
+      history.replaceState(null, '', '#' + tab);
+    }
+
+    observeReveals(document.getElementById('panel-' + tab));
+    window.scrollTo(0, 0);
+  }
+
+  function routeFromHash() {
+    var raw = (location.hash || '').replace(/^#/, '');
+    var parts = raw.split('/');
+    go(parts[0] || TAB_ORDER[0], parts[1] || null, false);
+  }
+
+  window.addEventListener('hashchange', routeFromHash);
+
+  // ── Reveal on scroll ─────────────────────────────────────────────
+  var observer = null;
+  if ('IntersectionObserver' in window) {
+    observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.08 });
+  }
+  function observeReveals(scope) {
+    if (!scope) return;
+    var nodes = scope.querySelectorAll('.reveal:not(.visible)');
+    if (!observer) {
+      Array.prototype.forEach.call(nodes, function (n) { n.classList.add('visible'); });
+      return;
+    }
+    Array.prototype.forEach.call(nodes, function (n) { observer.observe(n); });
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────
+  var site = CONTENT.site || {};
+  document.getElementById('heroTitle').innerHTML =
+    site.title ? String(site.title).replace(/^(\w+)/, '<span class="accent">$1</span>') : '<span class="accent">Axial</span> SWS';
+  document.getElementById('heroTagline').textContent = site.tagline || '';
+  document.getElementById('navUpdated').textContent = site.updated ? '/ ' + site.updated : '';
+  document.getElementById('footerNote').textContent =
+    'Client-side password gate on a public repository — cosmetic, not security.' +
+    (site.updated ? '  Updated ' + site.updated + '.' : '');
+  if (site.title) document.title = site.title;
+
+  routeFromHash();
+})();
+</script>
+</html>

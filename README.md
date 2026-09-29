@@ -6,7 +6,7 @@ Shear-wave splitting analysis of local seismicity at Axial Seamount on the Juan 
 
 Splitting parameters — fast polarization direction (φ) and delay time (δt) — measure the orientation and density of aligned cracks in the shear-wave window. Tracking how φ and δt change in space and time should constrain how the volcanic stress field reorganizes around eruptive episodes at submarine ridge volcanoes, and feeds into hazard / forecasting work on the Juan de Fuca Ridge.
 
-The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. As of this writing the analysis covers 2015–2021 from the OOI cabled array; future work extends it forward to today using 2022–2026 data from the **same caldera OBS network** (not a new deployment), sourced from the real-time (RT) version of the MLdd earthquake catalog.
+The long-term arc is to start just before the April 2015 eruption and run through to the present, currently re-inflated state of the caldera. The analysis now covers that full span in two eras: **2015–2021** from the OOI cabled array, and **2022–2026** from the **same caldera OBS network** (not a new deployment), sourced from the real-time (RT) version of the MLdd earthquake catalog. All six stations have been processed across both eras.
 
 ### Research Objectives
 - Track temporal changes in φ and δt across the 2015 eruption and the subsequent inflation cycle.
@@ -18,15 +18,18 @@ The long-term arc is to start just before the April 2015 eruption and run throug
 
 ### Network and time period
 - **Source**: OOI Regional Cabled Array (RCA), University of Washington
-- **Period**: 2015–2021 (current); long-term goal is pre-2015 → present
+- **Period**: 2015–2021 and 2022–2026, both processed
 - **Instrumentation**: short-period and broadband ocean-bottom seismometers
 
 ### Stations
-Five caldera-floor stations carry the analysis through the eruption window:
+Six caldera-floor stations carry the analysis:
 - **AXAS1, AXAS2** (western caldera wall - ASHES vent field)
+- **AXCC1** (central caldera)
 - **AXEC1, AXEC2, AXEC3** (eastern caldera wall)
 
-**AXCC1** (central caldera) tipped over in March 2015 due to caldera volumetric inflation, but is reset after the eruption onset. This portion of data is excluded, but otherwise the station has good coupling and is included in the analysis.
+AXEC2 and AXCC1 are the two broadband stations; the rest are short-period, which is part of why AXEC2 carries the highest usable measurement count.
+
+**AXCC1** was unlevelled by pre-eruption caldera inflation and reset after eruption onset. There is **no real data from 2015-03-01 to 2015-04-28**, and rolling-window analyses are blanked across that gap. Outside it the station has good coupling and is included on equal footing with the other five. Note that no *ongoing* post-tip tilt-affected window is encoded anywhere in `scripts/` — only the pre-eruption gap above.
 
 ### Earthquake catalogs
 
@@ -90,6 +93,26 @@ Applied uniformly before splitting:
 3. **Incidence angle** < 35° from vertical — see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation) below; the QC cut moved from 30° (legacy P-wave incidence) to 35° when the incidence calculation itself was corrected.
 4. **Magnitude** filter (default M > 0).
 
+### Grade 3 — the production post-filter
+
+QC above gates which events are *measured*. **Grade 3** is the filter applied to the measurements afterwards, and it is what every current production figure uses. Defined in `scripts/rose_7period_regions_windowcheck_grade3.py`:
+
+| Cut | Threshold |
+|---|---|
+| SNR (horizontal) | ≥ 2.0 |
+| Wüstefeld-style quality weight `Q_w` | ≥ 0.75 |
+| `δt_err` | ≤ 0.05 s |
+| `δt` | ≤ `T_dom`/2 |
+| `φ_err` | ≤ 20° |
+
+The `δt ≤ T_dom/2` cut is physical rather than statistical: cycle skipping sets in once the measured delay approaches the dominant period, swapping the fast and slow wavelets and returning a φ roughly 90° from the true one. Downstream plotting scripts import `apply_grade`/`STATION_ORDER` from that module rather than re-implementing the cut, so the filter cannot drift between figures.
+
+Earlier thresholds appear in older scripts and in figures not yet regenerated — most commonly `Q_w ≥ 0.5` with `φ_err < 20°` / `δt_err < 0.04 s`, and flat `δt < 0.24 s` or `δt < 0.30 s` caps. Those are superseded.
+
+### Multi-window sizing fix
+
+Grid-search windows shorter than the maximum allowed shift let SWSPy's cyclic `np.roll` lag shift wrap around, silently corrupting the measurement. The fix widens any undersized window to exactly `max_t_shift_s` (0.2 s) and pushes the last window's end one dominant period past it — see `swspy/swspy/splitting/split_windowcheck.py::create_splitting_object.__init__`. `split_windowcheck.py` is the production module; `split.py` is the pre-fix original, kept for comparison. φ and δt are largely unchanged by the fix, but `Q_w` can flip, so all six stations were re-run after it landed.
+
 ### S-wave incidence angle & LQT rotation
 
 LQT ray-based rotation needs the **S-wave** incidence angle at the receiver, not the P-wave incidence angle — using the P-wave Jurkevics incidence (the original QC/rotation angle) for LQT was a bug, since P- and S-wave particle motion have different geometric relationships to the ray (P motion is along the ray → `arccos`; S/SV motion is transverse to it → `arcsin`).
@@ -121,8 +144,20 @@ axial-sws/
 ├── swspy/                         # vendored, modified SWSPy (Teanby clustering fix)
 ├── scripts/                       # active code — see below
 ├── Axial_Deformation/             # DMODELS (Okada dike + Yang spheroid) input/output grids (untracked)
+├── site/                          # password-gated project website — see below
 └── pylith_axial/                  # PyLith poroelastic caldera stress model — see below
 ```
+
+### Project website (`site/`)
+
+A small static site collecting the current figures under Overview / Data / Methods / Results /
+Manuscript tabs, published to GitHub Pages by `.github/workflows/pages.yml`. Hand-written
+`index.html`, no build step. Figures are declared in `site/figures.json` and rendered from their
+source PDFs by `site/build_figures.py` (`python3 site/build_figures.py`); the sources are read-only
+inputs and are never modified. Preview locally with `python3 -m http.server -d site 8000`.
+
+**The site's password gate is client-side only and this repository is public** — it is cosmetic, and
+no manuscript text or pre-publication prose belongs under `site/`. See `site/README.md`.
 
 ### Active code in `scripts/`
 
@@ -144,7 +179,7 @@ Forward-modeling / ray tracing (crack-model side of the pipeline):
 
 Production run + rose plots (AXEC2 full-catalog, LQT + PyKonal-FMM incidence):
 - `run_production_axec2_all_batches.py` — production splitting run over the full 2015–2021 MLdd catalog (497 batches), `coord_system='LQT'`, PyKonal-FMM incidence, 35° cut, `Q_w` retained; writes to `production_axec2_lqt_pykonal_results/` (untracked).
-- `build_production_rose_plots_axec2.py`, `build_production_rose_plots_axec2_qw05.py` — 7-panel (eruption-relative) and annual rose plots from the production run, all-data and `Q_w ≥ 0.5`/φ_err<20°/δt_err<0.04s filtered.
+- `build_production_rose_plots_axec2.py`, `build_production_rose_plots_axec2_qw05.py` — 7-panel (eruption-relative) and annual rose plots from the AXEC2-only run, all-data and `Q_w ≥ 0.5`/φ_err<20°/δt_err<0.04s filtered. **Superseded** by the six-station Grade-3 chain (`rose_7period_regions_windowcheck_grade3.py` and friends); kept for comparison.
 - `axec2_temporal_histogram_lqt_pykonal.py` — 2D moving-window density histogram of δt/φ vs. time for AXEC2, from the production dataset.
 - `build_raw_ax*_batch1.py`, `build_raw_axec2_all_batches.py`, `fetch_raw_axas2_batch1.py` — raw-waveform QC rebuild (SNR + rectilinearity only, no incidence pre-filter) used to regenerate unbiased inputs for the above, since the pre-existing cached datasets were filtered with the old (buggy) incidence QC.
 - `sws_percent_anisotropy.py` — spatial percent-anisotropy maps (`A = V_s,mean · dt · 100 / r`), per-voxel median (no tomographic inversion) along PyKonal-traced rays.
@@ -164,7 +199,7 @@ Batch execution helpers:
 - `axial_splitting_mldd_AX*_RT_batched.py` — per-station batched splitting runs against the RT catalog.
 - `build_catalog_2022_2026.py` — builds the 2022–2026 RT catalog into this workflow's input format.
 - `run_ax*_RT_notebook.sh` — retry-loop wrappers for the RT batched scripts, mirroring the main batch execution helpers above.
-- Not yet run to completion; not part of the current decadal (2015–2021) production results.
+- Run to completion; the 2022–2026 results are part of the current production set and are combined with 2015–2021 by the Grade-3 loader (see [Status](#status)).
 
 Geodetic (BPR uplift) vs. fast-direction comparison:
 - `process_bpr_detided_depth*.py` (`_ccal`, `_ashes`, and the undecorated Eastern Caldera/AXEC2
@@ -295,8 +330,11 @@ results = perform_splitting_on_organized_waveforms(
 ## Status
 
 - **S-wave incidence angle / LQT rotation fix**: complete — see [S-wave incidence angle & LQT rotation](#s-wave-incidence-angle--lqt-rotation). `coord_system` parameter added throughout the pipeline; production now runs LQT + PyKonal-FMM incidence at a 35° cut.
-- **AXEC2 production run complete**: full 2015–2021 MLdd catalog, 497/497 batches, 88,649 successful LQT + PyKonal-FMM splitting measurements. Rose plots (7-panel + annual, all-data and `Q_w≥0.5` filtered) and a temporal histogram are built from this dataset — see `build_production_rose_plots_axec2*.py`, `axec2_temporal_histogram_lqt_pykonal.py`.
-- **Next**: re-run AXAS1, AXAS2, AXCC1, AXEC1, AXEC3 with the same LQT + PyKonal-FMM pipeline (currently only AXEC2 has been fully re-run; the deformation-modeling comparison below still uses the older P-Jurkevics-incidence per-station results for the other 5 stations as an interim measure), then fold AXCC1 in once tilt-corrected, then complete the 2022–2026 RT-catalog extension (same caldera stations, real-time MLdd catalog variant - see [Data](#data)).
+- **Six-station production run complete**, both eras. AXAS1, AXAS2, AXCC1, AXEC1, AXEC2 and AXEC3 have all been run through the current chain — MFAST multi-filter measurement, the [multi-window sizing fix](#multi-window-sizing-fix), LQT rotation on the PyKonal-FMM S incidence at a 35° cut — across 2015–2021 and 2022–2026.
+- **Where the production CSVs live**: `mfast_maxdt_windowcheck_pipeline_transfer/` (6 stations × 2 eras), **except AXEC2 2015–2021**, which sits at `scripts/splitting_results_AXEC2_2015_2021_all_batches.csv` and is special-cased by the loader in `scripts/rose_7period_regions_windowcheck_grade3.py`. Earlier output directories (`production_axec2_lqt_pykonal_results/`, `lqt_pykonal_combined_results/`, `mfast_maxdt_pipeline_transfer/`) are superseded generations kept for comparison.
+- **MFAST multi-filter measurement**: the fixed 5–40 Hz 4-pole bandpass was replaced by MFAST's 14-filter `try_filters` approach (2-pole Butterworth, per-event band chosen to maximise S-wave SNR), which substantially reduced filtering-driven cycle skipping.
+- **Current interpretation thread**: rolling fast direction compared against BOTPT seafloor uplift, fitted with an atan2 vector-sum model — φ as a linear combination of a fixed regional tectonic stress vector and a fixed-orientation inflation vector whose magnitude grows with caldera inflation. See `animate_arctan_stress_vectors.py::fit_atan2_vectorsum` and `atan2_uplift_vs_phi_sixstations_ccal_30day.py`.
+- **Next**: a Grade-3 delay-time-vs-time figure (none exists — `figure_ec3_multipanel_temporal_mfast_windowcheck_grade3.py` has the binning machinery but no δt panel), a six-station Grade-3 regeneration of the dataset-overview histograms (the current one pools only AXCC1+AXEC1+AXEC2 and predates the windowing fix), and a Grade-3 checkerboard for the Johnson et al. (2011) inversion (that run produced strength and quiver output only).
 - **Deformation modeling started**: DMODELS (Okada dike + Yang spheroid) forward-model comparison against observed φ/δt, both replicating Baillard's original 2019 comparison and a new version using this repo's own splitting results — see [Deformation modeling (DMODELS comparison)](#deformation-modeling-dmodels-comparison) below. AXID1 is excluded from the new version (not part of the production catalog); the exact DMODELS source parameters behind most of the individual `.xyzuvw` files are not recoverable from the current `axial_comb_V0.m`/`axial_dike_V0.m` (only the most recent scenario in each is preserved).
 - **Validation**: modified SWSPy and Baillard's single-window method agree to within ~5% on SNR, ≤1° on geometry, and consistent φ/δt across the NonLinLoc cross-check catalog.
 
@@ -332,9 +370,10 @@ Two comparison paths exist:
 (changing a `scenario` switch and hand-editing the output filename each time) rather than being
 checked in per-config, so the exact dike/fault parameters behind most individual files (e.g.
 `def_pre_1`, `def_syn_6`) are not recoverable from the current `axial_comb_V0.m`/`axial_dike_V0.m` —
-only the last-run scenario in each script is preserved. The `_hemmett` comparisons currently also
-use the **older, pre-LQT/PyKonal-FMM** per-station splitting results for 5 of 6 stations (only
-AXEC2 has been fully re-run — see [Status](#status)); revisit once the full re-run is complete.
+only the last-run scenario in each script is preserved. Note that the `_hemmett` comparisons were
+originally written against the older pre-LQT/PyKonal-FMM per-station results; the six-station
+re-run has since landed (see [Status](#status)), so check which CSVs a given `_hemmett` script
+actually reads before treating its output as current.
 
 ## Stress modeling (`pylith_axial/`)
 

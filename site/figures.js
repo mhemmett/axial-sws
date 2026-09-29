@@ -445,13 +445,51 @@ window.AXIAL_FIGURES = [
     "height": 349
   },
   {
+    "id": "geo-region-west",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Regional mean φ vs. uplift — Western Caldera",
+    "caption": "AXAS1 + AXAS2 pooled into a single western-caldera mean fast direction, against the same Central Caldera BOTPT uplift. Measurements are collapsed to per-calendar-day circular means before the 30-day roll, so each day counts once for the region. Fitted inflation azimuth β = 125.2°, A = 1.02, r = 0.52 over N = 2209. Note the turnover is auto-estimated at u₀ = 0.05 m, i.e. pinned to the low edge of the uplift range, so the fitted curve is a decay across the observed span rather than a completed S-transition.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/results/geo-region-west.webp",
+    "width": 1600,
+    "height": 1393
+  },
+  {
+    "id": "geo-region-east",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Regional mean φ vs. uplift — Eastern Caldera",
+    "caption": "AXEC1 + AXEC2 + AXEC3 pooled into an eastern-caldera mean, against Central Caldera uplift. The cleanest of the three regional fits: a steady rotation from about 160° to 130° with β = 247.3°, A = 1.27, r = 0.69 over N = 3064. AXEC2's 2021-07 to 2022-09 unlevelled window (520 measurements) is dropped from the pool rather than flagged, since a known instrumental drift would otherwise pull the regional average. The turnover sits at u₀ = 2.63 m, the upper edge of the observed uplift, so this span samples the near-linear part of the curve.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-region-east.webp",
+    "width": 1600,
+    "height": 974
+  },
+  {
+    "id": "geo-region-central",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Regional mean φ vs. uplift — Central Caldera",
+    "caption": "AXCC1 alone, against the Central Caldera uplift it sits on. The scatter is real and shows a rotation with inflation, but THE FITTED CURVE SHOULD NOT BE READ AS A RESULT: the fit returns β = 170.0°, exactly the fixed background azimuth α = 170°, with A = 41.7 against 0.4–1.3 at every other station or region. With β collapsed onto α the two stress vectors are collinear, the vector sum degenerates, and the atan2 argument flips sign across the turnover — which is the vertical jump visible at u₀ = 1.03 m. This is the same failure mode noted for AXCC1 in inflation_vector_map_sixstations_ccal.py, and it needs resolving before AXCC1's inflation-vector azimuth is used for anything.",
+    "badge": [
+      "degenerate_fit"
+    ],
+    "featured": false,
+    "src": "assets/figures/results/geo-region-central.webp",
+    "width": 1600,
+    "height": 1405
+  },
+  {
     "id": "geo-atan2-axas1",
     "tab": "results",
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXAS1",
     "caption": "φ against Central Caldera uplift, matched 30-day rolling windows on both axes, fitted with the atan2 vector-sum model: a fixed regional tectonic stress vector plus a fixed-orientation inflation vector whose magnitude grows with uplift. Turnover u0 is auto-estimated per station by a free-location logistic pre-fit.",
     "badge": [],
-    "featured": true,
+    "featured": false,
     "src": "assets/figures/results/geo-atan2-axas1.webp",
     "width": 1600,
     "height": 1404
@@ -515,44 +553,6 @@ window.AXIAL_FIGURES = [
     "src": "assets/figures/results/geo-atan2-axec3.webp",
     "width": 1600,
     "height": 1404
-  },
-  {
-    "id": "geo-region-west",
-    "tab": "results",
-    "group": "geodetic",
-    "title": "Regional mean φ vs. uplift — Western Caldera",
-    "caption": "AXAS1 + AXAS2 pooled into a single western-caldera mean fast direction, against the same Central Caldera BOTPT uplift. Measurements are collapsed to per-calendar-day circular means before the 30-day roll, so each day counts once for the region. Fitted inflation azimuth β = 125.2°, A = 1.02, r = 0.52 over N = 2209. Note the turnover is auto-estimated at u₀ = 0.05 m, i.e. pinned to the low edge of the uplift range, so the fitted curve is a decay across the observed span rather than a completed S-transition.",
-    "badge": [],
-    "featured": false,
-    "src": "assets/figures/results/geo-region-west.webp",
-    "width": 1600,
-    "height": 1393
-  },
-  {
-    "id": "geo-region-east",
-    "tab": "results",
-    "group": "geodetic",
-    "title": "Regional mean φ vs. uplift — Eastern Caldera",
-    "caption": "AXEC1 + AXEC2 + AXEC3 pooled into an eastern-caldera mean, against Central Caldera uplift. The cleanest of the three regional fits: a steady rotation from about 160° to 130° with β = 247.3°, A = 1.27, r = 0.69 over N = 3064. AXEC2's 2021-07 to 2022-09 unlevelled window (520 measurements) is dropped from the pool rather than flagged, since a known instrumental drift would otherwise pull the regional average. The turnover sits at u₀ = 2.63 m, the upper edge of the observed uplift, so this span samples the near-linear part of the curve.",
-    "badge": [],
-    "featured": false,
-    "src": "assets/figures/results/geo-region-east.webp",
-    "width": 1600,
-    "height": 974
-  },
-  {
-    "id": "geo-region-central",
-    "tab": "results",
-    "group": "geodetic",
-    "title": "Regional mean φ vs. uplift — Central Caldera",
-    "caption": "AXCC1 alone, against the Central Caldera uplift it sits on. The scatter is real and shows a rotation with inflation, but THE FITTED CURVE SHOULD NOT BE READ AS A RESULT: the fit returns β = 170.0°, exactly the fixed background azimuth α = 170°, with A = 41.7 against 0.4–1.3 at every other station or region. With β collapsed onto α the two stress vectors are collinear, the vector sum degenerates, and the atan2 argument flips sign across the turnover — which is the vertical jump visible at u₀ = 1.03 m. This is the same failure mode noted for AXCC1 in inflation_vector_map_sixstations_ccal.py, and it needs resolving before AXCC1's inflation-vector azimuth is used for anything.",
-    "badge": [
-      "degenerate_fit"
-    ],
-    "featured": false,
-    "src": "assets/figures/results/geo-region-central.webp",
-    "width": 1600,
-    "height": 1405
   },
   {
     "id": "geo-inflation-map",

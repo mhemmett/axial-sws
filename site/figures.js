@@ -688,6 +688,78 @@ window.AXIAL_FIGURES = [
     "height": 902
   },
   {
+    "id": "geo-modelcmp-axas1",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXAS1",
+    "caption": "Thinned winner: logarithmic. atan2 ranks 15/15 (ΔAICc 5.7) despite an R² of 0.292 against the winner's 0.288 — it fits marginally BETTER and loses purely on the k=5 penalty.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axas1.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-axas2",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXAS2",
+    "caption": "Essentially no relationship to fit: R² = 0.040. Whatever ranks first here is ranking noise. Consistent with AXAS2 being the station that does not show the eruption-onset response its western neighbour AXAS1 does.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axas2.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-axcc1",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXCC1",
+    "caption": "Thinned winner: logistic, with atan2 ranked 5/15 at ΔAICc 0.6 — statistically tied for best, and the highest R² of any model here (0.326 vs 0.317). Note this is about GOODNESS OF FIT only: AXCC1's atan2 PARAMETERS are separately degenerate (β collapses onto α, A ≈ 42), so a good fit here does not rescue its inflation-vector azimuth.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axcc1.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-axec1",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXEC1",
+    "caption": "Thinned winner: erfc, atan2 6/15 at ΔAICc 3.9. Four models tie within ΔAICc 2.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axec1.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-axec2",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXEC2",
+    "caption": "The strongest relationship in the dataset — R² = 0.71 raw, 0.50 thinned — and the only station where raw and thinned rankings AGREE (cubic both times). Read the curves, not the ranking: logistic, tanh, erfc, arctangent and atan2 all trace the same S-curve and sit within ΔAICc 3.6 of each other on the thinned series, while the winning cubic bends UPWARD at low uplift where no data supports it — a polynomial edge artifact, not a physical form.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axec2.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
+    "id": "geo-modelcmp-axec3",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Which function fits? — AXEC3",
+    "caption": "Thinned winner: cube root, atan2 15/15 (ΔAICc 7.2), R² 0.179 — a weak relationship.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-modelcmp-axec3.webp",
+    "width": 2200,
+    "height": 902
+  },
+  {
     "id": "corr-post-daily",
     "tab": "results",
     "group": "correlation",

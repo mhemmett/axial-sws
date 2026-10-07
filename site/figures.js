@@ -450,7 +450,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "West · Central · East — φ vs. uplift with atan2 fit",
-    "caption": "The three regional fits side by side, with no equation overlay. Same pooled Grade-3 events, daily-then-30-day rolling φ and Central Caldera BOTPT uplift as the single-region pages; the dashed curves are the same atan2 vector-sum fits (West β = 125.2°, r = 0.52; East β = 247.3°, r = 0.69). The light vertical bars are ±1 standard error of each rolling circular mean. The FIT DEGENERATE badge applies to the Central panel only: AXCC1's β collapses onto α (A ≈ 42), producing the jump at u₀ = 1.03 m — read its scatter, not its curve.",
+    "caption": "The three regional fits side by side, with no equation overlay. Same pooled Grade-3 events, daily-then-30-day rolling φ and Central Caldera BOTPT uplift as the single-region pages; the dashed curves are the same atan2 vector-sum fits (West β = 125.2°, r = 0.52; East β = 247.3°, r = 0.69). The light vertical bars are ±1 standard error of each rolling circular mean. The FIT DEGENERATE badge applies to the Central panel only: AXCC1's β collapses onto α (A ≈ 42), producing the jump at u₀ = 1.03 m — read its scatter, not its curve. Individual member stations sit underneath at 50% opacity (West: AXAS1 orange, AXAS2 purple; East: AXEC1 green, AXEC2 vermillion, AXEC3 sky blue), each rolled the same way as the average.",
     "badge": [
       "degenerate_fit"
     ],
@@ -464,7 +464,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "West · Central · East — φ vs. uplift, data only",
-    "caption": "The same three regional series with no model at all: just the rolling mean fast direction against uplift, and a light ±1 SE bar on every point. Each panel keeps its own wrap so its cloud never splits across the 0/180° edge, so equal heights in different panels are not equal angles. N = 2209 (West), 1303 (Central), 3064 (East); AXEC2's unlevelled 2021-07 to 2022-09 window is excluded from East.",
+    "caption": "The same three regional series with no model at all: just the rolling mean fast direction against uplift, and a light ±1 SE bar on every point. Each panel keeps its own wrap so its cloud never splits across the 0/180° edge, so equal heights in different panels are not equal angles. N = 2209 (West), 1303 (Central), 3064 (East); AXEC2's unlevelled 2021-07 to 2022-09 window is excluded from East. Individual member stations sit underneath at 50% opacity (West: AXAS1 orange, AXAS2 purple; East: AXEC1 green, AXEC2 vermillion, AXEC3 sky blue), each rolled the same way as the average.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-regions3-nofit.webp",
@@ -476,7 +476,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Change in φ since re-inflation began — West · Central · East",
-    "caption": "Δφ relative to each region's circular-mean φ in the first 30 days after the eruption (from 2015-05-19), on one shared y-axis. Because φ is axial, the axis cycles mod 180°; the shared 180° window (centred at −51°) is chosen automatically to keep every region's cloud away from the edges (≤ 1.7% of points within 15° of an edge). Ticks beyond ±90° are the equivalent orientation (−120° ≡ +60°). Light bars are ±1 SE of the rolling mean. All three regions rotate counter-clockwise with re-inflation — East by ~25–30°, West by ~90° — but West's reference rests on only 14 events (75° ± 10°), so its offset is loosely constrained.",
+    "caption": "Δφ relative to each region's circular-mean φ in the first 30 days after the eruption (from 2015-05-19), on one shared y-axis. Because φ is axial, the axis cycles mod 180°; the shared 180° window (centred at −51°) is chosen automatically to keep every region's cloud away from the edges (≤ 1.7% of points within 15° of an edge). Ticks beyond ±90° are the equivalent orientation (−120° ≡ +60°). Light bars are ±1 SE of the rolling mean. All three regions rotate counter-clockwise with re-inflation — East by ~25–30°, West by ~90° — but West's reference rests on only 14 events (75° ± 10°), so its offset is loosely constrained. Individual member stations sit underneath at 50% opacity (West: AXAS1 orange, AXAS2 purple; East: AXEC1 green, AXEC2 vermillion, AXEC3 sky blue), each rolled the same way as the average and referenced to its REGION's φ_ref, so station offsets are real orientation differences. Note AXEC2 diverging to ≈ −60° above 1.7 m while AXEC1 stays near +10°.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-regions3-dphi.webp",

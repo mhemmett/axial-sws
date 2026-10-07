@@ -59,6 +59,7 @@ from atan2_uplift_vs_phi_sixstations_ccal_30day import (
     ROLL_WINDOW_DAYS, ROLL_MIN_DAYS, UPLIFT_ROLLING_DAYS, GEODETIC_LABEL,
 )
 from atan2_uplift_vs_phi_regions_ccal_30day import load_region_pool
+from uplift_vs_phi_regions_scatter_ccal_30day import draw_member_stations, avg_label
 import bpr_inflation_periods_ccal as ccal_infl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -127,25 +128,33 @@ def main():
         x, y, se, phi_ref, phi_ref_se, n_ref = region_points(members, inflation_roll, ERUPTION_END)
         print(f'    {len(x)} post-eruption rolled points; phi_ref={phi_ref:.1f}+/-{phi_ref_se:.1f}'
               f' deg from {n_ref} events')
-        data.append((title, subtitle, x, y, se, phi_ref, phi_ref_se, n_ref))
+        data.append((title, subtitle, members, x, y, se, phi_ref, phi_ref_se, n_ref))
 
-    center, edge_frac = choose_shared_center([d[3] for d in data])
+    center, edge_frac = choose_shared_center([y for (_t, _s, _m, _x, y, *_rest) in data])
     y_lo = center - 90.0
     print(f'Shared y window: [{y_lo:.0f}, {y_lo + 180:.0f}] deg (centre {center:.0f}); worst panel '
           f'has {edge_frac*100:.1f}% of points within {EDGE_MARGIN_DEG:.0f} deg of an edge')
 
     fig, axes = plt.subplots(1, 3, figsize=(15, 5.4), sharex=True, sharey=True)
-    for ax, (title, subtitle, x, y, se, phi_ref, phi_ref_se, n_ref) in zip(axes, data):
+    for ax, (title, subtitle, members, x, y, se, phi_ref, phi_ref_se, n_ref) in zip(axes, data):
         y = (y - y_lo) % 180.0 + y_lo
+
+        # Member stations relative to the REGION's phi_ref (not their own), so inter-station
+        # offsets show as real orientation differences; same shared cycled window.
+        draw_member_stations(
+            ax, members, inflation_roll,
+            lambda p, ref=phi_ref: (((p - ref + 90.0) % 180.0 - 90.0) - y_lo) % 180.0 + y_lo)
 
         ax.axhline(0, color='0.5', lw=0.8, zorder=0)
         # Light error region: each rolled point's +-se_phi (circular SE of the 30-day mean).
         ax.vlines(x, y - se, y + se, color=POINT_COLOR, alpha=0.12, lw=1.5, zorder=1,
-                  label='±1 SE of rolling mean φ')
-        ax.scatter(x, y, s=18, color=POINT_COLOR, alpha=0.7, linewidths=0, zorder=2, label='Data')
+                  label='±1 SE (average)')
+        ax.scatter(x, y, s=18, color=POINT_COLOR, alpha=0.7, linewidths=0, zorder=2,
+                   label=avg_label(title, members))
         ax.set_ylim(y_lo, y_lo + 180.0)
         ax.set_yticks(np.arange(np.ceil(y_lo / 30.0) * 30.0, y_lo + 180.01, 30.0))
 
+        ax.legend(loc='best', fontsize=8.5, framealpha=0.9, markerscale=1.4)
         ax.set_title(f'{title}', fontsize=15, fontweight='bold', loc='left')
         ax.text(1.0, 1.02, f'{subtitle}\n$\\phi_{{ref}}$ = {phi_ref:.0f}° ± {phi_ref_se:.0f}° (n = {n_ref}), N = {len(x)}', transform=ax.transAxes,
                 ha='right', va='bottom', fontsize=8.5, color='0.35')
@@ -154,7 +163,6 @@ def main():
         for side in ('top', 'right'):
             ax.spines[side].set_visible(False)
 
-    axes[-1].legend(loc='lower left', fontsize=9, framealpha=0.9)
     axes[0].set_ylabel(f'$\\Delta\\phi$ since start of re-inflation (deg, clockwise +)\n'
                        f'({ROLL_WINDOW_DAYS}-day rolling window; axis cycles mod 180°)')
 

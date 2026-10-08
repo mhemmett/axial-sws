@@ -38,7 +38,8 @@
     "delay": "Delay time",
     "anisotropy": "Percent anisotropy",
     "inversion": "2D inversion — Johnson et al. (2011)",
-    "correlation": "Correlation matrices"
+    "correlation": "Correlation matrices",
+    "modeling": "Modeling — Baillard deformation models"
   },
   "figures": [
     {
@@ -826,6 +827,71 @@
       "badge": [
         "older_inversion"
       ]
+    },
+    {
+      "id": "model-ranking",
+      "tab": "results",
+      "group": "modeling",
+      "featured": true,
+      "width": 2200,
+      "title": "How well does each DMODELS scenario fit?",
+      "source": "scripts/deformation_figures/scenario_ranking_grade3.pdf",
+      "page": 1,
+      "caption": "Left: each grid's modeled principal-compression azimuth against the Grade-3 fast direction for its own period (pre grids vs pre-eruption, syn grids vs syn-eruption), RMS over six stations. Right: every pre → syn pair scored on the predicted CHANGE in azimuth, RMS about the 1:1 line. The dotted line is 52°, the RMS of a random axial misfit — the change test lands on or beyond it for every pair."
+    },
+    {
+      "id": "model-pre1-syn6-change",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Pre-1 → Syn-6: change in stress and fast direction",
+      "source": "scripts/deformation_figures/pre_1_vs_syn_6_change_grade3.pdf",
+      "page": 1,
+      "caption": "Baillard's change comparison, re-run on Grade-3 observations. Left: modeled change in σ₁ − σ₂ against observed change in median δt (10 ms quantisation is visible). Right: modeled vs observed change in azimuth against the 1:1 line — observed rotation is clockwise at every station, modeled is mixed."
+    },
+    {
+      "id": "model-syn6-map",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Syn-6 — modeled maximum compressive stress axis",
+      "source": "scripts/deformation_figures/def_syn_6_map_grade3.pdf",
+      "page": 1,
+      "caption": "Horizontal displacement magnitude with the most compressive horizontal stress axis, Syn-6 (dikes + prolate spheroid). Colormap carried over unchanged from Baillard's original plotting code."
+    },
+    {
+      "id": "model-pre1-map",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Pre-1 — modeled maximum compressive stress axis",
+      "source": "scripts/deformation_figures/def_pre_1_map_grade3.pdf",
+      "page": 1,
+      "caption": "As above, for the best-fitting pre-eruption scenario."
+    },
+    {
+      "id": "model-syn5-sigma1",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Syn-5 — model vs observed at each station",
+      "source": "scripts/deformation_figures/def_syn_5_sigma1_grade3.pdf",
+      "page": 1,
+      "caption": "Best syn-eruption grid by azimuth RMS (29°). Left: modeled σ₁ − σ₂ vs observed δt with linear fit. Right: modeled vs observed azimuth, 180°-wrapped."
+    },
+    {
+      "id": "model-syn6-sigma1",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Syn-6 — model vs observed at each station",
+      "source": "scripts/deformation_figures/def_syn_6_sigma1_grade3.pdf",
+      "page": 1,
+      "caption": "Second-best syn grid (33°); the stress–δt fit is flat (slope ≈ 0)."
+    },
+    {
+      "id": "model-pre1-sigma1",
+      "tab": "results",
+      "group": "modeling",
+      "title": "Pre-1 — model vs observed at each station",
+      "source": "scripts/deformation_figures/def_pre_1_sigma1_grade3.pdf",
+      "page": 1,
+      "caption": "Best pre-eruption grid (37° vs 54° for Pre-2)."
     }
   ]
 }

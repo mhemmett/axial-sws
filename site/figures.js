@@ -468,24 +468,24 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Percent anisotropy vs. uplift — pre- and syn-eruption",
-    "caption": "Percent anisotropy A = δt / T_S × 100 against de-tided Central Caldera uplift before the eruption (2015-01-22 → 04-24 06:00) and during it (→ 05-19, where the post-eruption figures begin). Rows: pre stations, pre averages, syn stations, syn averages; linear trendline on every series. 5-day rolling windows, computed strictly inside each period (the syn period is only ~25 days and most of the ~2.4 m deflation happens on the first day, so the post-eruption 30-day window cannot be used). Read the syn trends with care: almost all syn uplift values sit at 0–0.05 m and the first ~3 days after onset (0.25–0.38 m) carry the slopes. AXCC1 has no data 2015-03-01 → 04-28, so its syn panel spans only 0–0.045 m. Note that uplift bottoms out on 2015-05-02, so the last ~2 weeks of 'syn' already contain the earliest re-inflation.",
+    "caption": "Percent anisotropy A = δt / T_S × 100 against de-tided Central Caldera uplift before and during the eruption. Pre-eruption runs from the start of the record (2015-01-22) to the uplift peak, taken at eruption onset (2015-04-24 06:00); syn-eruption runs from that peak to the post-eruption uplift minimum (2015-05-02), the zero reference of every post-eruption figure. Pre-eruption uplift is relative to that minimum (positive, 5-day rolling); syn-eruption uplift is relative to the peak (mean of the 24 h before onset), so it is negative: 0 → −2.4 m of deflation. Syn values are daily (the period is 9 days), with ±1 SE from that day's events. Linear trendline on every series. Read the syn trends with care: most of the deflation happens within the first day, so the onset day (−1.55 m) is the only point away from the −2.3 to −2.4 m cluster and it sets the slopes. AXCC1 has no data 2015-03-01 → 04-28. 2015-05-03 → 05-18 (earliest re-inflation) is in neither this figure nor the post-eruption ones, which start at 05-19.",
     "badge": [],
     "featured": true,
     "src": "assets/figures/results/geo-presyn-aniso.webp",
     "width": 2200,
-    "height": 2733
+    "height": 2732
   },
   {
     "id": "geo-presyn-phi",
     "tab": "results",
     "group": "geodetic",
     "title": "Fast direction vs. uplift — pre- and syn-eruption",
-    "caption": "Same periods, windows and layout as the percent-anisotropy figure, for the rolling circular-mean fast direction (one y-axis wrap per column so rows line up). Linear trendlines only — the atan2 fit cannot be constrained by 25 days, and its β is not identifiable anyway. The same leverage caveat applies to the syn trends; pre-eruption AXCC1 is bimodal, so its trendline does not describe it, and its −680 °/m syn slope reflects a 0.045 m uplift span, not a physical rate.",
+    "caption": "Same periods, uplift references, smoothing and layout as the percent-anisotropy figure, for the circular-mean fast direction (one y-axis wrap per column so rows line up). Linear trendlines only — the atan2 fit cannot be constrained by 9 days, and its β is not identifiable anyway. The same onset-day leverage applies to the syn trends; pre-eruption AXCC1 is bimodal, so its trendline does not describe it, and AXCC1's syn panel spans only 0.04 m of uplift, so its slope is not a physical rate.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-presyn-phi.webp",
     "width": 2200,
-    "height": 2733
+    "height": 2738
   },
   {
     "id": "geo-post-aniso",

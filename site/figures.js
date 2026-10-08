@@ -25,6 +25,11 @@ window.AXIAL_FIGURE_META = {
       "label": "FIT DEGENERATE",
       "tone": "warn",
       "tooltip": "The fitted inflation azimuth collapses onto the fixed background azimuth and A blows up, producing a discontinuity. Read the scatter, not the curve."
+    },
+    "beta_unconstrained": {
+      "label": "β NOT CONSTRAINED",
+      "tone": "warn",
+      "tooltip": "With α fixed and C1, C2 free, the atan2 vector-sum model reduces exactly to a 3-parameter arctangent, so the inflation azimuth β is not identifiable from φ-vs-uplift data (profile likelihood flat over 222–356° of 360°). Read the curve, not β."
     }
   },
   "groups": {
@@ -327,6 +332,18 @@ window.AXIAL_FIGURES = [
     "height": 2632
   },
   {
+    "id": "rose-map-inflation",
+    "tab": "results",
+    "group": "rose",
+    "title": "Roses on the caldera map — 5 equal-inflation periods",
+    "caption": "Grade-3 fast-direction roses at each station for the five post-eruption periods that carry equal amounts of Central Caldera uplift, on low-contrast bathymetry showing the full caldera rim; the sixth panel shows the uplift curve with the periods shaded. AXEC2 and AXEC3 sit only 0.54 km apart, so at this rose size their roses are nudged apart with leader lines to their true positions. AXEC2's unlevelled 2021-07 to 2022-09 window is excluded.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/rose-map-inflation.webp",
+    "width": 2200,
+    "height": 1883
+  },
+  {
     "id": "rose-7period-ccal",
     "tab": "results",
     "group": "rose",
@@ -447,18 +464,67 @@ window.AXIAL_FIGURES = [
     "height": 349
   },
   {
+    "id": "geo-presyn-aniso",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Percent anisotropy vs. uplift — pre- and syn-eruption",
+    "caption": "Percent anisotropy A = δt / T_S × 100 against de-tided Central Caldera uplift before the eruption (2015-01-22 → 04-24 06:00) and during it (→ 05-19, where the post-eruption figures begin). Rows: pre stations, pre averages, syn stations, syn averages; linear trendline on every series. 5-day rolling windows, computed strictly inside each period (the syn period is only ~25 days and most of the ~2.4 m deflation happens on the first day, so the post-eruption 30-day window cannot be used). Read the syn trends with care: almost all syn uplift values sit at 0–0.05 m and the first ~3 days after onset (0.25–0.38 m) carry the slopes. AXCC1 has no data 2015-03-01 → 04-28, so its syn panel spans only 0–0.045 m. Note that uplift bottoms out on 2015-05-02, so the last ~2 weeks of 'syn' already contain the earliest re-inflation.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/results/geo-presyn-aniso.webp",
+    "width": 2200,
+    "height": 2733
+  },
+  {
+    "id": "geo-presyn-phi",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Fast direction vs. uplift — pre- and syn-eruption",
+    "caption": "Same periods, windows and layout as the percent-anisotropy figure, for the rolling circular-mean fast direction (one y-axis wrap per column so rows line up). Linear trendlines only — the atan2 fit cannot be constrained by 25 days, and its β is not identifiable anyway. The same leverage caveat applies to the syn trends; pre-eruption AXCC1 is bimodal, so its trendline does not describe it, and its −680 °/m syn slope reflects a 0.045 m uplift span, not a physical rate.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-presyn-phi.webp",
+    "width": 2200,
+    "height": 2733
+  },
+  {
+    "id": "geo-post-aniso",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Percent anisotropy vs. uplift — post-eruption, with trendlines",
+    "caption": "A = δt / T_S × 100 with T_S read directly from the PyKonal eikonal travel-time field through the Baillard 3-D S-velocity model. Normalising by T_S tests whether the δt trends are a ray-path-length effect: each panel lists r with uplift for δt, A and T_S. The West increase is genuine anisotropy (T_S flat; A slopes +0.57 / +1.21 %/m at AXAS1 / AXAS2, +0.84 %/m West average); AXCC1's weak δt rise is path-length driven (r(T_S, u) = +0.45, A slightly falls); the East is flat to slightly falling (−0.17 %/m). AXEC2 2015–2021 hypocentres were filled from the raw-batch metadata (its windowcheck CSV carries none).",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-post-aniso.webp",
+    "width": 2200,
+    "height": 1563
+  },
+  {
     "id": "geo-regions3-fit",
     "tab": "results",
     "group": "geodetic",
     "title": "West · Central · East — φ vs. uplift, station and regional atan2 fits",
     "caption": "Top row: every station on its own, 50% opacity, each with its own atan2 vector-sum fit (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black); Central shows AXCC1 in dark green. Bottom row: the regional averages (black) with their atan2 fits — the same fits as the single-region pages (West β = 125.2°, r = 0.52; East β = 247.3°, r = 0.69). Each column shares one y-axis wrap, so the rows line up. Light vertical bars are ±1 standard error of each rolling circular mean. A '(degenerate)' legend tag marks fits where β collapses onto the fixed background azimuth α (parallel or antiparallel) or A > 10: AXCC1, and all three East stations (AXEC1 β = 350°, AXEC2 β = 170°, AXEC3 β = 169.7°, A = 12–23). Those curves are effectively free S-curves and describe the shape well (AXEC2 r = 0.84), but their inflation azimuths mean nothing. Station fits drop AXEC2's unlevelled window, so they differ from the per-station atan2 pages, which flag it instead.",
     "badge": [
-      "degenerate_fit"
+      "degenerate_fit",
+      "beta_unconstrained"
     ],
     "featured": false,
     "src": "assets/figures/results/geo-regions3-fit.webp",
     "width": 2200,
     "height": 1560
+  },
+  {
+    "id": "geo-post-dt",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Delay time vs. uplift — post-eruption",
+    "caption": "30-day rolling mean δt against uplift, stations on top and regional averages below, shared δt axis, ±1 SE bars. δt rises with uplift in the West (AXAS1 r = +0.60, AXAS2 +0.51) and is flat to slightly falling in the East. See the percent-anisotropy version above for the path-length-normalised view.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-post-dt.webp",
+    "width": 2200,
+    "height": 1556
   },
   {
     "id": "geo-regions3-nofit",
@@ -490,8 +556,10 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Regional mean φ vs. uplift — Western Caldera",
     "caption": "AXAS1 + AXAS2 pooled into a single western-caldera mean fast direction, against the same Central Caldera BOTPT uplift. Measurements are collapsed to per-calendar-day circular means before the 30-day roll, so each day counts once for the region. Fitted inflation azimuth β = 125.2°, A = 1.02, r = 0.52 over N = 2209. Note the turnover is auto-estimated at u₀ = 0.05 m, i.e. pinned to the low edge of the uplift range, so the fitted curve is a decay across the observed span rather than a completed S-transition.",
-    "badge": [],
-    "featured": true,
+    "badge": [
+      "beta_unconstrained"
+    ],
+    "featured": false,
     "src": "assets/figures/results/geo-region-west.webp",
     "width": 1600,
     "height": 1352
@@ -502,7 +570,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Regional mean φ vs. uplift — Eastern Caldera",
     "caption": "AXEC1 + AXEC2 + AXEC3 pooled into an eastern-caldera mean, against Central Caldera uplift. The cleanest of the three regional fits: a steady rotation from about 160° to 130° with β = 247.3°, A = 1.27, r = 0.69 over N = 3064. AXEC2's 2021-07 to 2022-09 unlevelled window (520 measurements) is dropped from the pool rather than flagged, since a known instrumental drift would otherwise pull the regional average. The turnover sits at u₀ = 2.63 m, the upper edge of the observed uplift, so this span samples the near-linear part of the curve.",
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-region-east.webp",
     "width": 1600,
@@ -515,7 +585,8 @@ window.AXIAL_FIGURES = [
     "title": "Regional mean φ vs. uplift — Central Caldera",
     "caption": "AXCC1 alone, against the Central Caldera uplift it sits on. The scatter is real and shows a rotation with inflation, but THE FITTED CURVE SHOULD NOT BE READ AS A RESULT: the fit returns β = 170.0°, exactly the fixed background azimuth α = 170°, with A = 41.7 against 0.4–1.3 at every other station or region. With β collapsed onto α the two stress vectors are collinear, the vector sum degenerates, and the atan2 argument flips sign across the turnover — which is the vertical jump visible at u₀ = 1.03 m. This is the same failure mode noted for AXCC1 in inflation_vector_map_sixstations_ccal.py, and it needs resolving before AXCC1's inflation-vector azimuth is used for anything.",
     "badge": [
-      "degenerate_fit"
+      "degenerate_fit",
+      "beta_unconstrained"
     ],
     "featured": false,
     "src": "assets/figures/results/geo-region-central.webp",
@@ -528,7 +599,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXAS1",
     "caption": "φ against Central Caldera uplift, matched 30-day rolling windows on both axes, fitted with the atan2 vector-sum model: a fixed regional tectonic stress vector plus a fixed-orientation inflation vector whose magnitude grows with uplift. Turnover u0 is auto-estimated per station by a free-location logistic pre-fit.",
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axas1.webp",
     "width": 1600,
@@ -540,7 +613,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXAS2",
     "caption": null,
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axas2.webp",
     "width": 1600,
@@ -552,7 +627,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXCC1",
     "caption": "AXCC1's fit returns A ≈ 42 against 0.4–20 at every other station, producing a near-discontinuous rather than smooth transition. Treat this fit, and the AXCC1 arrow on the inflation-vector map, with more caution than the other five.",
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axcc1.webp",
     "width": 1600,
@@ -564,7 +641,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXEC1",
     "caption": null,
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec1.webp",
     "width": 1600,
@@ -576,7 +655,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXEC2",
     "caption": null,
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec2.webp",
     "width": 1600,
@@ -588,7 +669,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Uplift vs. fast direction — AXEC3",
     "caption": null,
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-atan2-axec3.webp",
     "width": 1600,
@@ -600,7 +683,9 @@ window.AXIAL_FIGURES = [
     "group": "geodetic",
     "title": "Fitted inflation-vector azimuths",
     "caption": "Grayscale bathymetry with each station's fitted inflation-vector azimuth β as a red arrow. Reuses compute_all_station_fits() from the fit above, so the map cannot drift from the fits. AXCC1's arrow inherits the caveat noted on its panel.",
-    "badge": [],
+    "badge": [
+      "beta_unconstrained"
+    ],
     "featured": false,
     "src": "assets/figures/results/geo-inflation-map.webp",
     "width": 1800,
@@ -799,13 +884,73 @@ window.AXIAL_FIGURES = [
     "height": 902
   },
   {
+    "id": "geo-beta-profile",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Is the inflation azimuth β constrained? Profile likelihood",
+    "caption": "β fixed on a 2° grid over the full circle, C1, C2 and A refit at each value, Δχ² corrected for the strong autocorrelation of the rolled series (effective N). For 7 of 8 series the profile is flat at Δχ² ≈ 0 over 222–356° of 360°; AXCC1's apparently constrained 50° is the degenerate collinear (β ≈ α) step. The reason is structural, not a data problem: with α fixed and C1, C2 free, the model reduces exactly to φ = C1′ + C2·atan((u − u₀)/w) with w = A²|sin(α − β)| — a 3-parameter arctangent reproduces the atan2 misfit to 1.0000 for 6 of 8 series. Fitted β values (and the inflation-vector map) therefore carry no information from these data.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-beta-profile.webp",
+    "width": 2200,
+    "height": 980
+  },
+  {
+    "id": "geo-resid-periodogram",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Are there periodic oscillations about the fits? Periodogram",
+    "caption": "Lomb–Scargle periodogram of the daily φ residual about each atan2 fit (sin 2r, wrap-safe), tested against an AR(1) red-noise null with a band-wide (global) 95% threshold. No significant peak in any series — nothing at annual, semi-annual or tidal (Mf, Mm) periods. Injection tests: a steady sinusoid at 14 d – 1 yr would be detected 90% of the time at ≥ 3–5° (East), 7–8° (West), 12–15° (AXAS2, AXCC1). The visible wiggles in the 30-day rolled plots are ~60–80% smoothing of day-to-day noise; the remainder is aperiodic, low-frequency wander.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-resid-periodogram.webp",
+    "width": 2200,
+    "height": 1030
+  },
+  {
+    "id": "geo-resid-wavelet",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Transient oscillations? Wavelet scalograms",
+    "caption": "Morlet wavelet power of the same daily residuals (Torrence & Compo 1998), cone of influence and < 50%-coverage cells masked. A significant patch counts only if it lasts longer than 95% of the largest patches in AR(1) surrogates run through the identical pipeline (area-wise test). No patch passes in any of the 8 series; the pointwise-significant fraction (0.7–4.8%) is at or below the ~5% expected from noise.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-resid-wavelet.webp",
+    "width": 2200,
+    "height": 1012
+  },
+  {
+    "id": "corr-pca",
+    "tab": "results",
+    "group": "correlation",
+    "title": "PCA of φ, δt and uplift — within and across stations",
+    "caption": "30-day post-eruption bins, standardised variables, moving-block bootstrap. Network PC1 (30%; 25% after linear detrending) combines uplift (−0.95), φ at the East stations and δt with OPPOSITE signs west and east (AXAS1 −0.69, AXEC2 +0.58); PC2 is not robust. De-tided and raw uplift are redundant at this bin size (r ≥ 0.999). Unlike the circular statistics below, φ enters linearly on each station's own 180° branch; AXAS1 and AXCC1 span nearly 180°, so their φ loadings depend on where that branch is cut.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/results/corr-pca.webp",
+    "width": 2200,
+    "height": 1213
+  },
+  {
+    "id": "corr-crosscorr",
+    "tab": "results",
+    "group": "correlation",
+    "title": "Cross-correlation of φ, δt and uplift — levels, changes and lags",
+    "caption": "Same 14 variables and bins as the PCA. (a) Levels: 34 / 91 pairs significant after an effective-N correction, mostly shared secular trend. (b) 30-day changes: 9 / 91 (≈ 4.5 expected by chance); no seismic variable's change tracks the uplift change, though φ changes co-vary between stations (AXAS1–AXEC1 +0.43), possibly because the same events are seen at several stations. (c, d) Lagged cross-correlation of changes vs uplift change, ±1 yr: no consistent lead or lag. φ is treated linearly per station (see the PCA caveat).",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/corr-crosscorr.webp",
+    "width": 2200,
+    "height": 1830
+  },
+  {
     "id": "corr-post-daily",
     "tab": "results",
     "group": "correlation",
     "title": "Correlation matrices — post-eruption, daily",
     "caption": "Every station's rolling φ and δt against every other station's and against Central Caldera BOTPT uplift. Three different coefficients, not interchangeable: φ–φ uses the Jammalamadaka–Sarma circular-circular correlation on doubled (axial) angles; δt–δt and δt–uplift use Pearson; φ–δt and φ–uplift use the circular-linear R, which is UNSIGNED (0–1) and must not be read as if high meant positive. Pearson on raw φ would be wrong — it would treat 179° and 1° as maximally different. This page is daily-sampled and therefore autocorrelated; its significance is overstated.",
     "badge": [],
-    "featured": true,
+    "featured": false,
     "src": "assets/figures/results/corr-post-daily.webp",
     "width": 2400,
     "height": 1886

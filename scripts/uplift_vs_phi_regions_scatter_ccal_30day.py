@@ -54,17 +54,22 @@ PANELS = [
      ['AXEC1', 'AXEC2', 'AXEC3']),
 ]
 
-POINT_COLOR = '#0072B2'   # same series color as the atan2 regional/per-station figures
+# Colours: the IBM Design colourblind-safe palette (via
+# https://forum.shotcut.org/t/palette-for-colour-blindness/32219):
+#   #648FFF blue, #785EF0 purple, #DC267F magenta, #FE6100 orange, #FFB000 gold, + black.
+# Five hues + black for six series, so the regional AVERAGE is black and every station gets its
+# own hue, never reused. Blue and purple (adjacent IBM steps, normal-vision dE 11) are kept in
+# different panels. Per-panel sets pass the dataviz validate_palette.js on all pairs (worst CVD
+# dE 18.3); gold is flagged only as too light on white, a known property of the IBM palette.
+POINT_COLOR = '#000000'   # regional average
 
-# Individual member stations, drawn UNDER the regional average at 50% opacity. Okabe-Ito hues,
-# one fixed colour per station (never reused), validated per panel (average + members, all
-# pairs) with the dataviz validate_palette.js: West and East sets both pass CVD/normal-vision.
+# Individual member stations, drawn UNDER the regional average at 50% opacity.
 STATION_COLORS = {
-    'AXAS1': '#E69F00',   # orange
-    'AXAS2': '#CC79A7',   # reddish purple
-    'AXEC1': '#009E73',   # bluish green
-    'AXEC2': '#D55E00',   # vermillion
-    'AXEC3': '#56B4E9',   # sky blue
+    'AXAS1': '#FE6100',   # orange
+    'AXAS2': '#648FFF',   # blue
+    'AXEC1': '#785EF0',   # purple
+    'AXEC2': '#DC267F',   # magenta
+    'AXEC3': '#FFB000',   # gold
 }
 STATION_ALPHA = 0.5
 

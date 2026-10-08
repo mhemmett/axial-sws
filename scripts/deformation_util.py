@@ -792,3 +792,67 @@ def get_station_obs_hemmett(period='syn'):
         }
 
     return dic_sta_obs
+
+
+def get_station_obs_grade3(period='syn'):
+    """
+    Same output contract as get_station_obs_hemmett(), but built from the current
+    production data chain: the window-check SWSPy rerun
+    (mfast_maxdt_windowcheck_pipeline_transfer/ + the full AXEC2 2015-2021 windowcheck
+    combined CSV), loaded and cut exactly as rose_7period_regions_windowcheck_grade3.py
+    does (load_station_raw + apply_grade with its GRADE):
+
+        SNR >= 2.0, quality (Q_w) >= 0.75, dt_err <= 0.05 s, dt <= T_dom/2, phi_err <= 20 deg
+
+    applied uniformly to all 6 stations (AXAS2 included - it is in the windowcheck
+    transfer folder, unlike get_station_obs_hemmett's old-pipeline AXAS2).
+
+    'fast' is the CIRCULAR (doubled-angle) mean of phi mod 180, not the linear median
+    get_station_obs_hemmett uses: a linear median of axial data straddling 0/180 (i.e.
+    near N-S fast directions) is biased. The linear median is kept as 'fast_median' for
+    comparison. 'lag' is the median dt in seconds (same as get_station_obs_hemmett).
+    'dz' is carried over from get_station_obs() (not a splitting output).
+
+    Periods: 'pre' = t < ERUPTION_START, 'syn' = ERUPTION_START <= t < ERUPTION_END
+    (same eruption bounds as the Grade 3 rose figures).
+    """
+
+    if period not in ['pre','syn']:
+        raise ValueError('period must be in [pre,syn] for get_station_obs_grade3')
+
+    from rose_7period_regions_windowcheck_grade3 import (
+        load_station_raw, apply_grade, GRADE, _circular_mean_and_se_deg,
+        ERUPTION_START, ERUPTION_END,
+    )
+
+    dz_by_station = get_station_obs(period=period)
+
+    dic_sta_obs = {}
+    for station in ['AXCC1', 'AXEC1', 'AXEC2', 'AXEC3', 'AXAS1', 'AXAS2']:
+        df = apply_grade(load_station_raw(station), GRADE)
+
+        if period == 'pre':
+            mask = df['t'] < ERUPTION_START
+        else:
+            mask = (df['t'] >= ERUPTION_START) & (df['t'] < ERUPTION_END)
+        sub = df[mask]
+
+        if len(sub) == 0:
+            fast, fast_se, fast_median, lag = None, None, None, None
+        else:
+            fast, fast_se = _circular_mean_and_se_deg(sub['phi_az'].values)
+            fast = float(fast)
+            fast_se = float(fast_se)
+            fast_median = float(np.median(sub['phi_az']))
+            lag = float(np.median(sub['dt']))  # seconds
+
+        dic_sta_obs[station] = {
+            'fast': fast,
+            'fast_se': fast_se,
+            'fast_median': fast_median,
+            'lag': lag,
+            'dz': dz_by_station.get(station, {}).get('dz'),
+            'n': len(sub),
+        }
+
+    return dic_sta_obs

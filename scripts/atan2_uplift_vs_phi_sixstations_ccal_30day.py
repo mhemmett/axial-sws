@@ -30,7 +30,7 @@ per-station tuning, and estimated the same way for every station.
 AXCC1: checked whether AXCC1's known 2015-03-01 to 2015-04-28 raw-data gap (see
 axcc1_uplift_phi_cosine_vs_time.py's GAP_START/GAP_END) needs special flagging here -- it does
 NOT, because that gap is entirely PRE-eruption and this fit (like the 3-station version) only
-uses POST-eruption data (valid = valid[valid['t'] >= ERUPTION_END]), so the gap never enters
+uses POST-eruption data (valid = valid[valid['t'] >= POST_ERUPTION_START]), so the gap never enters
 the fitted domain. No code in this repo implements an ongoing post-tip orientation/tilt-flagged
 window for AXCC1 distinct from that pre-eruption gap (README's "tipped over... treated
 separately" caveat is not backed by a specific flagged date range anywhere in scripts/) --
@@ -56,6 +56,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.optimize import curve_fit
 
@@ -124,7 +125,7 @@ def fit_station_vector(name, roll, inflation_roll, baseline_phi):
     plus its (merged, x, y, wrap) plot data without duplicating the load/roll/merge/fit
     pipeline. Returns a dict."""
     valid = roll.dropna(subset=['mean_phi']).copy()
-    valid = valid[valid['t'] >= ERUPTION_END]
+    valid = valid[valid['t'] >= POST_ERUPTION_START]
 
     infl_df = inflation_roll.dropna().reset_index()
     infl_df.columns = ['t', 'inflation_m']

@@ -66,6 +66,7 @@ from rose_7period_regions_windowcheck_grade3 import (
 from bpr_inflation_periods import (
     load_daily_series, build_inflation_based_periods, ERUPTION_START, ERUPTION_END,
 )
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_PDF = os.path.join(HERE, 'axec2_uplift_phi_cosine_vs_time.pdf')
@@ -157,11 +158,25 @@ def rolling_phi_stats_daily_then_roll(df, baseline_phi, window_days=90, min_days
         min_days = max(3, window_days // 10)
 
     win = f'{window_days}D'
-    roll_sin = daily['sin2'].rolling(win, center=True, min_periods=min_days).mean()
-    roll_cos = daily['cos2'].rolling(win, center=True, min_periods=min_days).mean()
-    roll_n = daily['n'].rolling(win, center=True, min_periods=min_days).sum()
-    roll_ndays = daily['n'].rolling(win, center=True, min_periods=min_days).count()
-    roll_dt = daily['dt_mean'].rolling(win, center=True, min_periods=min_days).mean()
+    # Roll SEPARATELY within pre-eruption / syn-eruption (onset -> post-eruption minimum) /
+    # post-eruption segments, so no window straddles the eruption.
+    onset_day = ERUPTION_START.floor('D')
+    seg_id = np.where(daily.index < onset_day, 0, np.where(daily.index < POST_ERUPTION_START, 1, 2))
+
+    def _seg_roll(col, how):
+        out = []
+        for k in (0, 1, 2):
+            sub = daily.loc[seg_id == k, col]
+            if len(sub):
+                r = sub.rolling(win, center=True, min_periods=min_days)
+                out.append(getattr(r, how)())
+        return pd.concat(out).reindex(daily.index)
+
+    roll_sin = _seg_roll('sin2', 'mean')
+    roll_cos = _seg_roll('cos2', 'mean')
+    roll_n = _seg_roll('n', 'sum')
+    roll_ndays = _seg_roll('n', 'count')
+    roll_dt = _seg_roll('dt_mean', 'mean')
 
     r_roll = np.hypot(roll_sin.values, roll_cos.values)
     mean_phi = (np.degrees(np.arctan2(roll_sin.values, roll_cos.values)) / 2.0) % 180.0

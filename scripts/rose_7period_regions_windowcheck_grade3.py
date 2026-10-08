@@ -64,6 +64,12 @@ AXEC2_2015_2021_WC_CSV = os.path.join(
     'splitting_results_mldd_2015_2021_axec2_mfast_filters_maxdt02_windowcheck_full_combined.csv')
 
 OUT_PDF = os.path.join(HERE, 'rose_7period_regions_windowcheck_grade3.pdf')
+# AXEC2's 2015-2021 windowcheck CSV carries NO hypocentres (latitude/longitude/depth are all NaN).
+# They come from the raw-batch metadata the run was built from: same event_id scheme, and origin
+# times verified identical for all 91,710 events. load_station_raw fills them so every
+# location- or depth-based analysis includes AXEC2 2015-2021.
+AXEC2_2015_2021_META_CSV = os.path.join(
+    HERE, 'raw_axec2_all_batches_mfast_filters_data', 'raw_axec2_all_batches_mfast_filters_metadata.csv')
 
 GRADE = dict(label='Grade 3: SNR>=2.0, quality>=0.75, dt_err<=0.05s, dt<=T_dom/2, phi_err<=20deg',
              snr_min=2.0, qw_min=0.75, phi_err_max=20.0, dt_err_max=0.05)
@@ -94,6 +100,13 @@ def load_station_raw(sta):
     if sta == 'AXEC2':
         wc = pd.read_csv(AXEC2_2015_2021_WC_CSV)
         wc['dominant_period'] = wc['chosen_filter_dom_period_samples'] / 200.0
+        meta = pd.read_csv(AXEC2_2015_2021_META_CSV,
+                           usecols=['event_id', 'latitude', 'longitude', 'depth']).set_index('event_id')
+        for c in ('latitude', 'longitude', 'depth'):
+            if c not in wc.columns:
+                wc[c] = np.nan
+            miss = wc[c].isna()
+            wc.loc[miss, c] = wc.loc[miss, 'event_id'].map(meta[c]).values
         dfs.append(wc)
     df = pd.concat(dfs, ignore_index=True)
     df = df[df['success'] == True].copy()

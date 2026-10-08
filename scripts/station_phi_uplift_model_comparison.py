@@ -44,6 +44,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from matplotlib.backends.backend_pdf import PdfPages
 
 from rose_7period_regions_windowcheck_grade3 import (
@@ -83,7 +84,7 @@ def main():
                                                  min_days=ROLL_MIN_DAYS)
 
         valid = roll.dropna(subset=['mean_phi']).copy()
-        valid = valid[valid['t'] >= ERUPTION_END]
+        valid = valid[valid['t'] >= POST_ERUPTION_START]
         merged = pd.merge_asof(valid.sort_values('t'), infl_df.sort_values('t'), on='t',
                                direction='nearest', tolerance=pd.Timedelta('20D'))
         merged = merged.dropna(subset=['inflation_m']).reset_index(drop=True)

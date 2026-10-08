@@ -38,6 +38,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from matplotlib.backends.backend_pdf import PdfPages
 
 from rose_7period_regions_windowcheck_grade3 import (
@@ -79,8 +80,8 @@ def make_page(name, roll, inflation_roll, baseline_phi):
 
     flag_unleveled = name in UNLEVELED_STATIONS
     pre_mask = (merged['t'] < ERUPTION_START).values
-    syn_mask = ((merged['t'] >= ERUPTION_START) & (merged['t'] < ERUPTION_END)).values
-    post_mask = (merged['t'] >= ERUPTION_END).values
+    syn_mask = ((merged['t'] >= ERUPTION_START) & (merged['t'] < POST_ERUPTION_START)).values
+    post_mask = (merged['t'] >= POST_ERUPTION_START).values
     unlevel_mask = ((merged['t'] >= UNLEVEL_START) & (merged['t'] < UNLEVEL_END)).values if flag_unleveled \
         else np.zeros(len(merged), dtype=bool)
     post_mask = post_mask & ~unlevel_mask

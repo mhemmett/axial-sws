@@ -336,7 +336,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "rose",
     "title": "Roses on the caldera map — 5 equal-inflation periods",
-    "caption": "Grade-3 fast-direction roses at each station for the five post-eruption periods that carry equal amounts of Central Caldera uplift, on low-contrast bathymetry showing the full caldera rim; the sixth panel shows the uplift curve with the periods shaded. AXEC2 and AXEC3 sit only 0.54 km apart, so at this rose size their roses are nudged apart with leader lines to their true positions. AXEC2's unlevelled 2021-07 to 2022-09 window is excluded.",
+    "caption": "Grade-3 fast-direction roses at each station for the five post-eruption periods that carry equal amounts of Central Caldera uplift (counted from the post-eruption minimum, 2015-05-02), on low-contrast bathymetry showing the full caldera rim; the sixth panel shows the uplift curve with the periods shaded. AXEC2 and AXEC3 sit only 0.54 km apart, so at this rose size their roses are nudged apart with leader lines to their true positions. AXEC2's unlevelled 2021-07 to 2022-09 window is excluded.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/rose-map-inflation.webp",
@@ -348,7 +348,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "rose",
     "title": "Fast direction by equal-inflation period",
-    "caption": "The same figure with the five post-eruption bins carrying equal amounts of Central Caldera inflation rather than equal event counts — the physically motivated companion, and the newest of the rose set.",
+    "caption": "The same figure with the five post-eruption bins carrying equal amounts of Central Caldera inflation rather than equal event counts — the physically motivated companion. Post-eruption bins now start at the uplift minimum (2015-05-02), so 'During Eruption' here is onset → minimum.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/rose-7period-ccal.webp",
@@ -468,31 +468,31 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Percent anisotropy vs. uplift — pre- and syn-eruption",
-    "caption": "Percent anisotropy A = δt / T_S × 100 against de-tided Central Caldera uplift before the eruption (2015-01-22 → 04-24 06:00) and during it (→ 05-19, where the post-eruption figures begin). Rows: pre stations, pre averages, syn stations, syn averages; linear trendline on every series. 5-day rolling windows, computed strictly inside each period (the syn period is only ~25 days and most of the ~2.4 m deflation happens on the first day, so the post-eruption 30-day window cannot be used). Read the syn trends with care: almost all syn uplift values sit at 0–0.05 m and the first ~3 days after onset (0.25–0.38 m) carry the slopes. AXCC1 has no data 2015-03-01 → 04-28, so its syn panel spans only 0–0.045 m. Note that uplift bottoms out on 2015-05-02, so the last ~2 weeks of 'syn' already contain the earliest re-inflation.",
+    "caption": "Percent anisotropy A = δt / T_S × 100 against de-tided Central Caldera uplift before and during the eruption. Pre-eruption runs from the start of the record (2015-01-22) to the uplift peak, taken at eruption onset (2015-04-24 06:00); syn-eruption runs from that peak to the post-eruption uplift minimum (2015-05-02), the zero reference of every post-eruption figure. Pre-eruption uplift is relative to that minimum (positive, 5-day rolling); syn-eruption uplift is relative to the peak (mean of the 24 h before onset), so it is negative: 0 → −2.4 m of deflation. Syn values are daily (the period is 9 days), with ±1 SE from that day's events. Linear trendline on every series. Read the syn trends with care: most of the deflation happens within the first day, so the onset day (−1.55 m) is the only point away from the −2.3 to −2.4 m cluster and it sets the slopes. AXCC1 has no data 2015-03-01 → 04-28. The post-eruption figures start exactly at that minimum, so pre, syn and post tile the record with no gap.",
     "badge": [],
     "featured": true,
     "src": "assets/figures/results/geo-presyn-aniso.webp",
     "width": 2200,
-    "height": 2733
+    "height": 2732
   },
   {
     "id": "geo-presyn-phi",
     "tab": "results",
     "group": "geodetic",
     "title": "Fast direction vs. uplift — pre- and syn-eruption",
-    "caption": "Same periods, windows and layout as the percent-anisotropy figure, for the rolling circular-mean fast direction (one y-axis wrap per column so rows line up). Linear trendlines only — the atan2 fit cannot be constrained by 25 days, and its β is not identifiable anyway. The same leverage caveat applies to the syn trends; pre-eruption AXCC1 is bimodal, so its trendline does not describe it, and its −680 °/m syn slope reflects a 0.045 m uplift span, not a physical rate.",
+    "caption": "Same periods, uplift references, smoothing and layout as the percent-anisotropy figure, for the circular-mean fast direction (one y-axis wrap per column so rows line up). Linear trendlines only — the atan2 fit cannot be constrained by 9 days, and its β is not identifiable anyway. The same onset-day leverage applies to the syn trends; pre-eruption AXCC1 is bimodal, so its trendline does not describe it, and AXCC1's syn panel spans only 0.04 m of uplift, so its slope is not a physical rate.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-presyn-phi.webp",
     "width": 2200,
-    "height": 2733
+    "height": 2738
   },
   {
     "id": "geo-post-aniso",
     "tab": "results",
     "group": "geodetic",
     "title": "Percent anisotropy vs. uplift — post-eruption, with trendlines",
-    "caption": "A = δt / T_S × 100 with T_S read directly from the PyKonal eikonal travel-time field through the Baillard 3-D S-velocity model. Normalising by T_S tests whether the δt trends are a ray-path-length effect: each panel lists r with uplift for δt, A and T_S. The West increase is genuine anisotropy (T_S flat; A slopes +0.57 / +1.21 %/m at AXAS1 / AXAS2, +0.84 %/m West average); AXCC1's weak δt rise is path-length driven (r(T_S, u) = +0.45, A slightly falls); the East is flat to slightly falling (−0.17 %/m). AXEC2 2015–2021 hypocentres were filled from the raw-batch metadata (its windowcheck CSV carries none).",
+    "caption": "A = δt / T_S × 100 with T_S read directly from the PyKonal eikonal travel-time field through the Baillard 3-D S-velocity model; post-eruption from the uplift minimum (2015-05-02), rolled within the post-eruption period. Normalising by T_S tests whether the δt trends are a ray-path-length effect: each panel lists r with uplift for δt, A and T_S. The West increase is genuine anisotropy (T_S flat to slightly shortening; A slopes +0.63 / +1.14 %/m at AXAS1 / AXAS2, +0.83 %/m West average); AXCC1's weak δt rise is path-length driven (r(T_S, u) = +0.46, A slightly falls, −0.10 %/m); the East is flat to slightly falling (−0.16 %/m). AXEC2 2015–2021 hypocentres come from the raw-batch metadata (its windowcheck CSV carries none).",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-post-aniso.webp",
@@ -504,7 +504,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "West · Central · East — φ vs. uplift, station and regional atan2 fits",
-    "caption": "Top row: every station on its own, 50% opacity, each with its own atan2 vector-sum fit (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black); Central shows AXCC1 in dark green. Bottom row: the regional averages (black) with their atan2 fits — the same fits as the single-region pages (West β = 125.2°, r = 0.52; East β = 247.3°, r = 0.69). Each column shares one y-axis wrap, so the rows line up. Light vertical bars are ±1 standard error of each rolling circular mean. A '(degenerate)' legend tag marks fits where β collapses onto the fixed background azimuth α (parallel or antiparallel) or A > 10: AXCC1, and all three East stations (AXEC1 β = 350°, AXEC2 β = 170°, AXEC3 β = 169.7°, A = 12–23). Those curves are effectively free S-curves and describe the shape well (AXEC2 r = 0.84), but their inflation azimuths mean nothing. Station fits drop AXEC2's unlevelled window, so they differ from the per-station atan2 pages, which flag it instead.",
+    "caption": "Top row: every station on its own, 50% opacity, each with its own atan2 vector-sum fit (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black); Central shows AXCC1 in dark green. Bottom row: the regional averages (black) with their atan2 fits — the same fits as the single-region pages (West r = 0.57; East r = 0.69). Post-eruption starts at the uplift minimum (2015-05-02) and every rolling window stays inside the post-eruption period. Each column shares one y-axis wrap, so the rows line up; light vertical bars are ±1 SE of each rolling circular mean. A '(degenerate)' legend tag marks fits where β collapses onto the fixed background azimuth α (parallel or antiparallel, within 1°) or A > 10 — here AXCC1 and AXAS1, AXEC1, AXEC2, AXEC3. Because β is not identifiable at all (see the profile-likelihood figure), read every curve as a shape description only.",
     "badge": [
       "degenerate_fit",
       "beta_unconstrained"
@@ -519,7 +519,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Delay time vs. uplift — post-eruption",
-    "caption": "30-day rolling mean δt against uplift, stations on top and regional averages below, shared δt axis, ±1 SE bars. δt rises with uplift in the West (AXAS1 r = +0.60, AXAS2 +0.51) and is flat to slightly falling in the East. See the percent-anisotropy version above for the path-length-normalised view.",
+    "caption": "30-day rolling mean δt against uplift from the post-eruption minimum (2015-05-02), stations on top and regional averages below, shared δt axis, ±1 SE bars. δt rises with uplift in the West (AXAS1 r = +0.65, AXAS2 +0.50) and is flat to slightly falling in the East (AXEC2 −0.36). See the percent-anisotropy version above for the path-length-normalised view.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-post-dt.webp",
@@ -531,7 +531,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "West · Central · East — φ vs. uplift, data only",
-    "caption": "The same three regional series with no model at all: just the rolling mean fast direction against uplift, and a light ±1 SE bar on every point. Each panel keeps its own wrap so its cloud never splits across the 0/180° edge, so equal heights in different panels are not equal angles. N = 2209 (West), 1303 (Central), 3064 (East); AXEC2's unlevelled 2021-07 to 2022-09 window is excluded from East. Individual member stations sit underneath at 50% opacity (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black), each rolled the same way as the average.",
+    "caption": "The same three regional series with no model at all: just the rolling mean fast direction against uplift, with a light ±1 SE bar on every point. Post-eruption starts at the uplift minimum (2015-05-02); rolling windows stay inside the post-eruption period. Each panel keeps its own wrap so its cloud never splits across the 0/180° edge, so equal heights in different panels are not equal angles. N = 2226 (West), 1320 (Central), 3081 (East); AXEC2's unlevelled 2021-07 to 2022-09 window is excluded from East. Individual member stations sit underneath at 50% opacity (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black).",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-regions3-nofit.webp",
@@ -543,7 +543,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Change in φ since re-inflation began — West · Central · East",
-    "caption": "Δφ relative to each region's circular-mean φ in the first 30 days after the eruption (from 2015-05-19), on one shared y-axis. Because φ is axial, the axis cycles mod 180°; the shared 180° window (centred at −51°) is chosen automatically to keep every region's cloud away from the edges (≤ 1.7% of points within 15° of an edge). Ticks beyond ±90° are the equivalent orientation (−120° ≡ +60°). Light bars are ±1 SE of the rolling mean. All three regions rotate counter-clockwise with re-inflation — East by ~25–30°, West by ~90° — but West's reference rests on only 14 events (75° ± 10°), so its offset is loosely constrained. Individual member stations sit underneath at 50% opacity (IBM colour-blind-safe palette — West: AXAS1 orange, AXAS2 blue; East: AXEC1 purple, AXEC2 magenta, AXEC3 gold; regional average black), each rolled the same way as the average and referenced to its REGION's φ_ref, so station offsets are real orientation differences. Note AXEC2 diverging to ≈ −60° above 1.7 m while AXEC1 stays near +10°.",
+    "caption": "Δφ relative to each region's circular-mean φ in the first 30 days of re-inflation (from the uplift minimum, 2015-05-02), on one shared y-axis. φ is axial, so the axis cycles mod 180°; the shared 180° window (centred at −46°) is chosen automatically to keep every region's cloud away from the edges (≤ 1.4% of points within 15° of an edge). Ticks beyond ±90° are the equivalent orientation (−120° ≡ +60°). Light bars are ±1 SE. References are now well constrained because May 2 – June 1 is seismically active: West 37.9° ± 5.1° (107 events), Central 27.6° ± 4.2° (78), East 153.7° ± 2.7° (303). Member stations sit underneath at 50% opacity, referenced to their REGION's φ_ref, so station offsets are real orientation differences.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-regions3-dphi.webp",
@@ -555,7 +555,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Regional mean φ vs. uplift — Western Caldera",
-    "caption": "AXAS1 + AXAS2 pooled into a single western-caldera mean fast direction, against the same Central Caldera BOTPT uplift. Measurements are collapsed to per-calendar-day circular means before the 30-day roll, so each day counts once for the region. Fitted inflation azimuth β = 125.2°, A = 1.02, r = 0.52 over N = 2209. Note the turnover is auto-estimated at u₀ = 0.05 m, i.e. pinned to the low edge of the uplift range, so the fitted curve is a decay across the observed span rather than a completed S-transition.",
+    "caption": "AXAS1 + AXAS2 pooled into a single western-caldera mean fast direction, against Central Caldera BOTPT uplift from the post-eruption minimum (2015-05-02). Measurements are collapsed to per-calendar-day circular means before the 30-day roll, so each day counts once for the region. atan2 fit r = 0.57 over N = 2226; the turnover is auto-estimated at u₀ = 0.02 m, the low edge of the uplift range, so the curve is a decay across the observed span rather than a completed S-transition. β is not identifiable (see the profile-likelihood figure), so no inflation azimuth is quoted.",
     "badge": [
       "beta_unconstrained"
     ],
@@ -569,7 +569,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Regional mean φ vs. uplift — Eastern Caldera",
-    "caption": "AXEC1 + AXEC2 + AXEC3 pooled into an eastern-caldera mean, against Central Caldera uplift. The cleanest of the three regional fits: a steady rotation from about 160° to 130° with β = 247.3°, A = 1.27, r = 0.69 over N = 3064. AXEC2's 2021-07 to 2022-09 unlevelled window (520 measurements) is dropped from the pool rather than flagged, since a known instrumental drift would otherwise pull the regional average. The turnover sits at u₀ = 2.63 m, the upper edge of the observed uplift, so this span samples the near-linear part of the curve.",
+    "caption": "AXEC1 + AXEC2 + AXEC3 pooled into an eastern-caldera mean, against Central Caldera uplift from the post-eruption minimum (2015-05-02). The cleanest of the three regional relationships: a steady rotation from about 160° to 130°, atan2 fit r = 0.69 over N = 3081. AXEC2's 2021-07 to 2022-09 unlevelled window is dropped from the pool rather than flagged, since a known instrumental drift would otherwise pull the regional average. The turnover sits at u₀ = 2.63 m, the upper edge of the uplift range. With the post-eruption start moved to the minimum, the fitted β (174°) now sits almost on the fixed α = 170° — the same near-collinear regime as AXCC1 — another sign that β carries no information.",
     "badge": [
       "beta_unconstrained"
     ],
@@ -583,7 +583,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Regional mean φ vs. uplift — Central Caldera",
-    "caption": "AXCC1 alone, against the Central Caldera uplift it sits on. The scatter is real and shows a rotation with inflation, but THE FITTED CURVE SHOULD NOT BE READ AS A RESULT: the fit returns β = 170.0°, exactly the fixed background azimuth α = 170°, with A = 41.7 against 0.4–1.3 at every other station or region. With β collapsed onto α the two stress vectors are collinear, the vector sum degenerates, and the atan2 argument flips sign across the turnover — which is the vertical jump visible at u₀ = 1.03 m. This is the same failure mode noted for AXCC1 in inflation_vector_map_sixstations_ccal.py, and it needs resolving before AXCC1's inflation-vector azimuth is used for anything.",
+    "caption": "AXCC1 alone, against the Central Caldera uplift it sits on, from the post-eruption minimum (2015-05-02). The scatter is real and shows a rotation with inflation, but THE FITTED CURVE SHOULD NOT BE READ AS A RESULT: β collapses exactly onto the fixed background azimuth α = 170° with A ≈ 421, so the two vectors are collinear, the vector sum degenerates, and the atan2 argument flips sign across the turnover — the vertical jump at u₀ = 1.03 m.",
     "badge": [
       "degenerate_fit",
       "beta_unconstrained"
@@ -682,7 +682,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Fitted inflation-vector azimuths",
-    "caption": "Grayscale bathymetry with each station's fitted inflation-vector azimuth β as a red arrow. Reuses compute_all_station_fits() from the fit above, so the map cannot drift from the fits. AXCC1's arrow inherits the caveat noted on its panel.",
+    "caption": "Grayscale bathymetry with each station's fitted inflation-vector azimuth β as a red arrow, from compute_all_station_fits(). SUPERSEDED AS A RESULT: β is not identifiable from φ-vs-uplift data (the model reduces exactly to a 3-parameter arctangent; see the profile-likelihood figure), and after the post-eruption start moved to the uplift minimum most station fits collapse onto α. Kept for the record only.",
     "badge": [
       "beta_unconstrained"
     ],
@@ -696,7 +696,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Uplift vs. φ, unfitted — AXAS1",
-    "caption": "The deliberate no-fit view: pre-eruption deflation and post-eruption re-inflation as two panels pivoting at zero uplift, 90-day windows. Complementary to the fitted version, not superseded by it.",
+    "caption": "The deliberate no-fit view: pre-eruption and post-eruption panels pivoting at zero uplift, 90-day windows. Post-eruption now starts at the uplift minimum (2015-05-02) and windows are rolled separately within the pre, syn and post periods, so none straddles the eruption. Complementary to the fitted version, not superseded by it.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-nofit-axas1.webp",
@@ -768,7 +768,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Central Caldera BOTPT — de-tided depth and uplift",
-    "caption": "De-tided seafloor depth 2015-01-22 to 2026-05-15, and metres of uplift referenced to the post-eruption minimum, with the five equal-inflation period boundaries marked. Total re-inflation ≈ 2.6 m.",
+    "caption": "De-tided seafloor depth 2015-01-22 to 2026-05-15, and metres of uplift referenced to the post-eruption minimum (2015-05-02), with the five equal-inflation period boundaries marked. The 30-day rolling curve is computed separately within the pre-eruption, syn-eruption (onset → minimum) and post-eruption segments, so it no longer smears the ~2.4 m eruption step across ±15 days. Total re-inflation ≈ 2.6 m.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-bpr-ccal.webp",
@@ -792,7 +792,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — Western Caldera",
-    "caption": "Fifteen candidate families fitted to the same western regional φ-vs-uplift data and ranked by AICc: linear, quadratic, cubic, logarithmic, square root, cube root, power law, exponential decay and saturation, hyperbolic, logistic, tanh, arctangent, erfc, and the production atan2 vector-sum. NO FORM IS SUPPORTED HERE — R² is 0.13–0.16 on the thinned series and the whole 15-model field spans only ΔAICc 7.2, so nothing is distinguishable. The atan2 model ranks last of fifteen on the thinned series.",
+    "caption": "Fifteen candidate families fitted to the western regional φ-vs-uplift data (post-eruption from the uplift minimum) and ranked by AICc: linear, quadratic, cubic, logarithmic, square root, cube root, power law, exponential decay and saturation, hyperbolic, logistic, tanh, arctangent, erfc, and the production atan2 vector-sum. NO FORM IS PREFERRED: on the thinned (~independent) series R² ≈ 0.33 for the best model and the whole field spans only ΔAICc 7.7, with eight models within ΔAICc 2. atan2 ranks 14th of 15 thinned (ΔAICc 4.8) and 9th raw.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-west.webp",
@@ -804,7 +804,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — Eastern Caldera",
-    "caption": "Same battery on the eastern regional mean, where a real relationship does exist (R² ≈ 0.48 daily, 0.35 thinned). Its SHAPE is not resolved: arctangent wins on the raw series but plain LINEAR wins once the series is decimated to ~independent samples, with eleven of fifteen models inside ΔAICc 2.3 of each other. The fitted curves overlay almost exactly across the observed uplift range. The atan2 vector-sum model ranks 8th raw and 12th thinned. Median residual lag-1 ρ = 0.948, so effective N ≈ 82 of 3064 — which is why the raw ranking cannot be taken at face value.",
+    "caption": "Same battery on the eastern regional mean, where a real relationship exists (R² ≈ 0.48 daily, 0.38 thinned). Its SHAPE is not resolved: arctangent wins on the raw daily series, quadratic on the thinned one. atan2 ranks 8th raw and 12th thinned (ΔAICc 4.6). Median residual lag-1 ρ = 0.947, so effective N ≈ 83 of 3081 — which is why the raw ranking cannot be taken at face value.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-east.webp",
@@ -816,7 +816,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXAS1",
-    "caption": "Thinned winner: logarithmic. atan2 ranks 15/15 (ΔAICc 5.7) despite an R² of 0.292 against the winner's 0.288 — it fits marginally BETTER and loses purely on the k=5 penalty.",
+    "caption": "Thinned winner: arctangent (R² 0.257). atan2 ranks 15/15 (ΔAICc 5.0) with a nearly identical R² (0.240): it describes the same shape and loses on the k = 5 penalty; six models tie within ΔAICc 2.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axas1.webp",
@@ -828,7 +828,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXAS2",
-    "caption": "Essentially no relationship to fit: R² = 0.040. Whatever ranks first here is ranking noise. Consistent with AXAS2 being the station that does not show the eruption-onset response its western neighbour AXAS1 does.",
+    "caption": "Essentially no relationship to fit: R² ≤ 0.07 raw and ≤ 0.05 thinned. Whatever ranks first here is ranking noise.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axas2.webp",
@@ -840,7 +840,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXCC1",
-    "caption": "Thinned winner: logistic, with atan2 ranked 5/15 at ΔAICc 0.6 — statistically tied for best, and the highest R² of any model here (0.326 vs 0.317). Note this is about GOODNESS OF FIT only: AXCC1's atan2 PARAMETERS are separately degenerate (β collapses onto α, A ≈ 42), so a good fit here does not rescue its inflation-vector azimuth.",
+    "caption": "atan2 ranks first on both the raw and thinned series (thinned R² 0.324), with five models within ΔAICc 2. This is GOODNESS OF FIT only: AXCC1's atan2 parameters are degenerate (β collapses onto α, A ≫ 10), so the fit's step shape, not any inflation azimuth, is what wins.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axcc1.webp",
@@ -852,7 +852,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXEC1",
-    "caption": "Thinned winner: erfc, atan2 6/15 at ΔAICc 3.9. Four models tie within ΔAICc 2.",
+    "caption": "Thinned winner: erfc (R² 0.238); atan2 ranks 5/15 at ΔAICc 2.8 with R² 0.234. Four models tie within ΔAICc 2.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axec1.webp",
@@ -864,7 +864,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXEC2",
-    "caption": "The strongest relationship in the dataset — R² = 0.71 raw, 0.50 thinned — and the only station where raw and thinned rankings AGREE (cubic both times). Read the curves, not the ranking: logistic, tanh, erfc, arctangent and atan2 all trace the same S-curve and sit within ΔAICc 3.6 of each other on the thinned series, while the winning cubic bends UPWARD at low uplift where no data supports it — a polynomial edge artifact, not a physical form.",
+    "caption": "The strongest relationship in the dataset — R² = 0.71 raw, 0.67 thinned. Read the curves, not the ranking: erfc wins the thinned series, cubic the raw one, and atan2 (R² 0.66 thinned, ΔAICc 4.0) traces the same S-curve; five models sit within ΔAICc 2.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axec2.webp",
@@ -876,7 +876,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Which function fits? — AXEC3",
-    "caption": "Thinned winner: cube root, atan2 15/15 (ΔAICc 7.2), R² 0.179 — a weak relationship.",
+    "caption": "Thinned winner: square root, atan2 15/15 (ΔAICc 6.2), R² ≈ 0.20 — a weak relationship; seven models tie within ΔAICc 2.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-modelcmp-axec3.webp",
@@ -888,7 +888,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "geodetic",
     "title": "Is the inflation azimuth β constrained? Profile likelihood",
-    "caption": "β fixed on a 2° grid over the full circle, C1, C2 and A refit at each value, Δχ² corrected for the strong autocorrelation of the rolled series (effective N). For 7 of 8 series the profile is flat at Δχ² ≈ 0 over 222–356° of 360°; AXCC1's apparently constrained 50° is the degenerate collinear (β ≈ α) step. The reason is structural, not a data problem: with α fixed and C1, C2 free, the model reduces exactly to φ = C1′ + C2·atan((u − u₀)/w) with w = A²|sin(α − β)| — a 3-parameter arctangent reproduces the atan2 misfit to 1.0000 for 6 of 8 series. Fitted β values (and the inflation-vector map) therefore carry no information from these data.",
+    "caption": "β fixed on a 2° grid over the full circle, C1, C2 and A refit at each value, Δχ² corrected for the strong autocorrelation of the rolled series (effective N). For most series the profile is flat at Δχ² ≈ 0 over 226–342° of 360°; the series that look 'constrained' (AXCC1 44°, AXEC1 22°, AXAS2 52°) are the degenerate near-collinear β ≈ α solutions, not a measured inflation azimuth. The reason is structural, not a data problem: with α fixed and C1, C2 free, the model reduces exactly to φ = C1′ + C2·atan((u − u₀)/w) with w = A²|sin(α − β)| — a 3-parameter arctangent reproduces the atan2 misfit for most series. Fitted β values (and the inflation-vector map) carry no information from these data.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/geo-beta-profile.webp",
@@ -924,7 +924,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "correlation",
     "title": "PCA of φ, δt and uplift — within and across stations",
-    "caption": "30-day post-eruption bins, standardised variables, moving-block bootstrap. Network PC1 (30%; 25% after linear detrending) combines uplift (−0.95), φ at the East stations and δt with OPPOSITE signs west and east (AXAS1 −0.69, AXEC2 +0.58); PC2 is not robust. De-tided and raw uplift are redundant at this bin size (r ≥ 0.999). Unlike the circular statistics below, φ enters linearly on each station's own 180° branch; AXAS1 and AXCC1 span nearly 180°, so their φ loadings depend on where that branch is cut.",
+    "caption": "30-day post-eruption bins from the uplift minimum (2015-05-02), standardised variables, moving-block bootstrap. Network PC1 (32%; 25% after linear detrending) combines uplift (−0.96), φ at the East stations (AXEC2 +0.84, AXEC1 +0.56, AXEC3 +0.52) and δt with OPPOSITE signs west and east (AXAS1 −0.67); PC2 is not robust. De-tided and raw uplift are redundant at this bin size (r ≥ 0.999). Unlike the circular statistics below, φ enters linearly on each station's own 180° branch; AXAS1 and AXCC1 span nearly 180°, so their φ loadings depend on where that branch is cut (AXAS1's sign has flipped between runs for exactly this reason).",
     "badge": [],
     "featured": true,
     "src": "assets/figures/results/corr-pca.webp",
@@ -936,7 +936,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "correlation",
     "title": "Cross-correlation of φ, δt and uplift — levels, changes and lags",
-    "caption": "Same 14 variables and bins as the PCA. (a) Levels: 34 / 91 pairs significant after an effective-N correction, mostly shared secular trend. (b) 30-day changes: 9 / 91 (≈ 4.5 expected by chance); no seismic variable's change tracks the uplift change, though φ changes co-vary between stations (AXAS1–AXEC1 +0.43), possibly because the same events are seen at several stations. (c, d) Lagged cross-correlation of changes vs uplift change, ±1 yr: no consistent lead or lag. φ is treated linearly per station (see the PCA caveat).",
+    "caption": "Same 14 variables and bins as the PCA. (a) Levels: 41 / 91 pairs significant after an effective-N correction, mostly shared secular trend. (b) 30-day changes: 8 / 91 (≈ 4.5 expected by chance); no seismic variable's change tracks the uplift change. (c, d) Lagged cross-correlation of changes vs uplift change, ±1 yr: no consistent lead or lag (peaks |r| ≈ 0.2–0.35 at scattered lags, at the significance level). φ is treated linearly per station (see the PCA caveat).",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/corr-crosscorr.webp",
@@ -960,7 +960,7 @@ window.AXIAL_FIGURES = [
     "tab": "results",
     "group": "correlation",
     "title": "Correlation matrices — post-eruption, thinned",
-    "caption": "The same matrices decimated to one point per 30 days, roughly the decorrelation scale — believe this page where it disagrees with the daily one. Strongest station-station φ coupling is AXAS1–AXEC2 (r = 0.67), then AXCC1–AXEC3 (0.54). Against uplift, φ at AXAS1 (R = 0.79), AXEC2 (0.72) and AXCC1 (0.65) track the geodetic record most closely; δt tracks it far more weakly except at AXAS1 (0.58). Median pairwise N = 51.",
+    "caption": "The same matrices decimated to one point per 30 days, roughly the decorrelation scale — believe this page where it disagrees with the daily one. Post-eruption starts at the uplift minimum (2015-05-02). Strongest station-station φ coupling is AXAS1–AXEC2 (r = 0.59). Against uplift, φ at AXEC2 (R = 0.76) and AXAS1 (0.72) track the geodetic record most closely, then AXCC1 (0.54) and AXEC1 (0.52); δt tracks uplift only in the West (AXAS1 0.65, AXAS2 0.58). Median pairwise N = 46.",
     "badge": [],
     "featured": false,
     "src": "assets/figures/results/corr-post-thin.webp",
@@ -997,85 +997,73 @@ window.AXIAL_FIGURES = [
     "id": "delay-depth-axas1",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXAS1",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXAS1",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXAS1, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events).",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axas1.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1335
   },
   {
     "id": "delay-depth-axas2",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXAS2",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXAS2",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXAS2, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events).",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axas2.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1335
   },
   {
     "id": "delay-depth-axcc1",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXCC1",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXCC1",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXCC1, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events).",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axcc1.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1332
   },
   {
     "id": "delay-depth-axec1",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXEC1",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXEC1",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXEC1, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events).",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axec1.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1332
   },
   {
     "id": "delay-depth-axec2",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXEC2",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXEC2",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXEC2, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events). Includes all 16,005 AXEC2 2015–2021 events: their hypocentres are filled from the raw-batch metadata, because the window-check CSV for that half carries none.",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axec2.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1335
   },
   {
     "id": "delay-depth-axec3",
     "tab": "results",
     "group": "delay",
-    "title": "Delay time vs. source depth — AXEC3",
-    "caption": null,
-    "badge": [
-      "pre_windowcheck"
-    ],
+    "title": "Delay time vs. depth — AXEC3",
+    "caption": "Grade-3 delay time against source depth below seafloor for AXEC3, from the current window-check run. δt is reported on the grid search's 10 ms step, so the colour rows are exact values; the white line is the mean δt ± 1 SE per depth bin (≥ 20 events).",
+    "badge": [],
     "featured": false,
     "src": "assets/figures/results/delay-depth-axec3.webp",
     "width": 1600,
-    "height": 1305
+    "height": 1332
   },
   {
     "id": "aniso-spatial-frac",

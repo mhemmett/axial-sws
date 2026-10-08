@@ -28,7 +28,7 @@ inflation_m(t) = detided_depth_m(t) - reference_depth_m
 
 5 equal-inflation post-eruption bins: computed on the ROLLING_DAYS-day centered rolling mean of
 daily inflation (not the raw daily series), by dividing the range [rolling mean at
-ERUPTION_END, rolling mean at the last available date] into 5 equal-height bands and taking the
+POST_ERUPTION_START (the post-eruption minimum), rolling mean at the last available date] into 5 equal-height bands and taking the
 first date the rolling-mean curve crosses each internal band edge.
 
 Run this module directly to print the resulting periods table; import
@@ -53,11 +53,39 @@ REF_WINDOW_START = ERUPTION_START - pd.Timedelta(days=5)
 REF_WINDOW_END = ERUPTION_END + pd.Timedelta(days=30)
 
 ROLLING_DAYS = 30
+
+# Start of the post-eruption (re-inflation) record = the post-eruption uplift MINIMUM, i.e. the
+# zero reference load_daily_series() finds (ref_time). Fixed here so every script can share it as
+# a constant; load_daily_series() warns if the data ever move the minimum. The syn-eruption
+# period is ERUPTION_START -> POST_ERUPTION_START (pre-eruption peak at onset -> minimum).
+POST_ERUPTION_START = pd.Timestamp('2015-05-02', tz='UTC')
 REF_SMOOTH_DAYS = 5   # smoothing used only to LOCATE the reference date, avoiding 1-day spikes
 
 
+def segmented_rolling_mean(series, window_days, min_periods):
+    """Centred rolling mean computed SEPARATELY within the pre-eruption, syn-eruption
+    (ERUPTION_START -> POST_ERUPTION_START) and post-eruption segments of a daily series, so no
+    window straddles the eruption (a 30-day centred window across the ~2.4 m deflation would
+    otherwise bleed pre-eruption uplift ~15 days into the post-eruption record, and vice versa).
+    The onset day itself belongs to the syn segment."""
+    onset_day = ERUPTION_START.floor('D')
+    idx = series.index
+    parts = []
+    for lo, hi in ((None, onset_day), (onset_day, POST_ERUPTION_START), (POST_ERUPTION_START, None)):
+        m = np.ones(len(idx), dtype=bool)
+        if lo is not None:
+            m &= idx >= lo
+        if hi is not None:
+            m &= idx < hi
+        seg = series[m]
+        if len(seg):
+            parts.append(seg.rolling(f'{window_days}D', center=True, min_periods=min_periods).mean())
+    return pd.concat(parts).reindex(idx)
+
+
 def load_daily_series():
-    """Daily-mean detided depth, referenced daily-mean inflation, and its rolling mean."""
+    """Daily-mean detided depth, referenced daily-mean inflation, and its rolling mean
+    (rolled within pre / syn / post-eruption segments -- see segmented_rolling_mean)."""
     df = pd.read_csv(DETIDED_CSV, usecols=['time', 'detided_depth_m'])
     df['time'] = pd.to_datetime(df['time'], utc=True)
     df = df.set_index('time')
@@ -68,8 +96,12 @@ def load_daily_series():
     ref_time = ref_window_smoothed.idxmin()
     ref_depth = float(daily_depth.loc[ref_time])   # report the actual (unsmoothed) value at that date
 
+    if ref_time != POST_ERUPTION_START:
+        print(f'WARNING: post-eruption minimum is now {ref_time.date()}, but '
+              f'POST_ERUPTION_START is {POST_ERUPTION_START.date()} -- update the constant.')
+
     inflation = daily_depth - ref_depth
-    inflation_roll = inflation.rolling(f'{ROLLING_DAYS}D', center=True, min_periods=ROLLING_DAYS // 2).mean()
+    inflation_roll = segmented_rolling_mean(inflation, ROLLING_DAYS, ROLLING_DAYS // 2)
 
     return daily_depth, inflation, inflation_roll, ref_time, ref_depth
 
@@ -79,13 +111,13 @@ def build_inflation_based_periods():
     bins, boundaries found via first-crossing on the rolling-mean inflation curve."""
     _daily_depth, _inflation, inflation_roll, _ref_time, _ref_depth = load_daily_series()
 
-    post = inflation_roll.loc[ERUPTION_END:].dropna()
+    post = inflation_roll.loc[POST_ERUPTION_START:].dropna()
     v_start = float(post.iloc[0])
     v_end = float(post.iloc[-1])
     last_date = post.index[-1]
 
     edges = np.linspace(v_start, v_end, 6)   # 5 bins -> 6 edges (band values, not dates)
-    boundaries = [ERUPTION_END]
+    boundaries = [POST_ERUPTION_START]
     increasing = v_end >= v_start
     for edge_val in edges[1:5]:
         if increasing:
@@ -101,7 +133,7 @@ def build_inflation_based_periods():
 
     periods = [
         ('Before Eruption', None, ERUPTION_START),
-        ('During Eruption', ERUPTION_START, ERUPTION_END),
+        ('During Eruption', ERUPTION_START, POST_ERUPTION_START),
     ]
     for i in range(5):
         t0, t1 = boundaries[i], boundaries[i + 1]
@@ -113,7 +145,7 @@ if __name__ == '__main__':
     daily_depth, inflation, inflation_roll, ref_time, ref_depth = load_daily_series()
     print(f'Zero-inflation reference: {ref_time.date()}  (detided depth = {ref_depth:.4f} m)')
     print(f'\n{ROLLING_DAYS}-day rolling-mean inflation, post-eruption:')
-    post = inflation_roll.loc[ERUPTION_END:].dropna()
+    post = inflation_roll.loc[POST_ERUPTION_START:].dropna()
     print(f'  at Post-eruption start ({post.index[0].date()}): {post.iloc[0]:.4f} m')
     print(f'  at last available date ({post.index[-1].date()}): {post.iloc[-1]:.4f} m')
 

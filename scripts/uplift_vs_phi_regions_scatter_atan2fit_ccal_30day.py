@@ -125,8 +125,13 @@ def main():
 
         # ---- Top row: each member station with its own fit; Central replicated as-is -------
         if len(members) == 1:
-            draw_series(ax_sta, fit, wrap, POINT_COLOR, avg_label(title, members), 0.7, 0.12,
-                        avg_style, fit_name=fit_name)
+            # Same station-row styling as West/East (50% points, solid haloed fit), in AXCC1's
+            # own station colour; the bottom row keeps it black as the regional average.
+            sta = members[0]
+            draw_series(ax_sta, fit, wrap, STATION_COLORS[sta], sta, STATION_ALPHA, 0.08,
+                        dict(color=STATION_COLORS[sta], lw=2.2, linestyle='-',
+                             path_effects=[pe.withStroke(linewidth=4, foreground='white')]),
+                        s=12)
             ax_sta.text(1.0, 1.02, f'{subtitle}\nN = {len(fit["x"])}', transform=ax_sta.transAxes,
                         ha='right', va='bottom', fontsize=8.5, color='0.35')
         else:

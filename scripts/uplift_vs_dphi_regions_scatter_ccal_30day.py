@@ -59,7 +59,7 @@ from atan2_uplift_vs_phi_sixstations_ccal_30day import (
     ROLL_WINDOW_DAYS, ROLL_MIN_DAYS, UPLIFT_ROLLING_DAYS, GEODETIC_LABEL,
 )
 from atan2_uplift_vs_phi_regions_ccal_30day import load_region_pool
-from uplift_vs_phi_regions_scatter_ccal_30day import draw_member_stations, avg_label
+from uplift_vs_phi_regions_scatter_ccal_30day import draw_member_stations, avg_label, POINT_COLOR
 import bpr_inflation_periods_ccal as ccal_infl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -75,7 +75,6 @@ PANELS = [
      ['AXEC1', 'AXEC2', 'AXEC3']),
 ]
 
-POINT_COLOR = '#0072B2'   # same series color as the atan2 regional/per-station figures
 
 
 def region_points(members, inflation_roll, ref_start):

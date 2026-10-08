@@ -70,6 +70,10 @@ STATION_COLORS = {
     'AXEC1': '#785EF0',   # purple
     'AXEC2': '#DC267F',   # magenta
     'AXEC3': '#FFB000',   # gold
+    # AXCC1 is drawn only in the fit figure's station row (it is alone in its panel). The IBM
+    # palette's five hues are taken, so it gets one added hue: dark green, distinct from every
+    # IBM hue at normal vision (worst CVD overlap: orange AXAS1, which is never in its panel).
+    'AXCC1': '#117733',   # dark green
 }
 STATION_ALPHA = 0.5
 

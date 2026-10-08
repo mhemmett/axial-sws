@@ -10,7 +10,8 @@ uplift (de-tided AND non-de-tided), post-eruption, Grade 3:
       (14 variables), so shared modes between stations and with the geodesy show up as common
       loadings on the same component.
 
-Sampling: non-overlapping 30-day bins from ERUPTION_END. Daily values are dominated by
+Sampling: non-overlapping 30-day bins from POST_ERUPTION_START (the post-eruption uplift
+minimum). Daily values are dominated by
 single-event noise and overlapping rolled windows duplicate information, so neither is used.
 Per station and bin (>= MIN_EVENTS Grade-3 events, else missing):
     phi  -> circular mean, kept as a real azimuth in degrees. phi is axial (mod 180), so each
@@ -50,7 +51,8 @@ import matplotlib.pyplot as plt
 
 from rose_7period_regions_windowcheck_grade3 import GRADE, load_station_raw, apply_grade
 from rose_7period_6stations_newdata_snr_grades import STATION_ORDER
-from axec2_uplift_phi_cosine_vs_time import ERUPTION_END, UNLEVEL_START, UNLEVEL_END
+from axec2_uplift_phi_cosine_vs_time import UNLEVEL_START, UNLEVEL_END
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from animate_arctan_stress_vectors import compute_optimal_wrap
 import bpr_inflation_periods_ccal as ccal_infl
 
@@ -85,11 +87,11 @@ def build_table():
     u_raw = raw_daily - float(raw_daily.loc[ref_time])
 
     t_end = u_det.dropna().index.max()
-    edges = pd.date_range(ERUPTION_END, t_end, freq=f'{BIN_DAYS}D')
+    edges = pd.date_range(POST_ERUPTION_START, t_end, freq=f'{BIN_DAYS}D')
     mids = edges[:-1] + pd.Timedelta(days=BIN_DAYS / 2)
 
     def bin_series(s):
-        s = s.loc[ERUPTION_END:t_end].dropna()
+        s = s.loc[POST_ERUPTION_START:t_end].dropna()
         idx = edges.searchsorted(s.index, side='right') - 1
         ok = (idx >= 0) & (idx < len(edges) - 1)
         return pd.Series(s.values[ok]).groupby(idx[ok]).mean().reindex(range(len(mids)))
@@ -101,7 +103,7 @@ def build_table():
 
     for sta in STATION_ORDER:
         df = apply_grade(load_station_raw(sta), GRADE)
-        df = df[df['t'] >= ERUPTION_END]
+        df = df[df['t'] >= POST_ERUPTION_START]
         if sta == 'AXEC2':
             df = df[~((df['t'] >= UNLEVEL_START) & (df['t'] < UNLEVEL_END))]
         idx = edges.searchsorted(pd.DatetimeIndex(df['t']), side='right') - 1
@@ -176,7 +178,7 @@ def var_color(name):
 def main():
     rng = np.random.default_rng(SEED)
     table = build_table()
-    print(f'{len(table)} bins of {BIN_DAYS} d from {ERUPTION_END.date()}')
+    print(f'{len(table)} bins of {BIN_DAYS} d from {POST_ERUPTION_START.date()}')
 
     fig = plt.figure(figsize=(19, 10.5))
     gs = fig.add_gridspec(2, 6, height_ratios=[1, 1.25], hspace=0.55, wspace=0.42,

@@ -39,6 +39,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 import matplotlib.patheffects as pe
 
 from axec2_uplift_phi_cosine_vs_time import ERUPTION_END
@@ -120,7 +121,7 @@ def travel_times():
 
 def rolled(pool, col, inflation_roll):
     """Daily mean of `col` -> 30-day centred rolling mean + SE, post-eruption, on uplift."""
-    d = pool[['t', col]].dropna().copy()
+    d = pool.loc[pool['t'] >= POST_ERUPTION_START, ['t', col]].dropna().copy()   # post only
     d['day'] = d['t'].dt.floor('D')
     daily = d.groupby('day')[col].mean()
     win = f'{ROLL_WINDOW_DAYS}D'
@@ -129,7 +130,7 @@ def rolled(pool, col, inflation_roll):
     nd = daily.rolling(win, center=True, min_periods=ROLL_MIN_DAYS).count()
     roll = pd.DataFrame({'t': daily.index, 'v': m.values,
                          'se': (s / np.sqrt(nd.clip(lower=1))).values}).dropna()
-    roll = roll[roll['t'] >= ERUPTION_END]
+    roll = roll[roll['t'] >= POST_ERUPTION_START]
     infl = inflation_roll.dropna().reset_index()
     infl.columns = ['t', 'u']
     merged = pd.merge_asof(roll.sort_values('t'), infl.sort_values('t'), on='t',

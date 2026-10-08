@@ -32,6 +32,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 
 from axec2_uplift_phi_cosine_vs_time import ERUPTION_END
 from atan2_uplift_vs_phi_sixstations_ccal_30day import (
@@ -52,6 +53,7 @@ def rolled_dt(members, inflation_roll):
     Returns (x uplift m, dt ms, se ms)."""
     with contextlib.redirect_stdout(io.StringIO()):
         pool = load_region_pool(members)
+    pool = pool[pool['t'] >= POST_ERUPTION_START]     # roll post-eruption data only
     d = pool[['t', 'dt']].copy()
     d['day'] = d['t'].dt.floor('D')
     daily = d.groupby('day')['dt'].mean() * 1000.0          # ms
@@ -61,7 +63,7 @@ def rolled_dt(members, inflation_roll):
     nd = daily.rolling(win, center=True, min_periods=ROLL_MIN_DAYS).count()
     roll = pd.DataFrame({'t': daily.index, 'dt_ms': m.values,
                          'se_ms': (s / np.sqrt(nd.clip(lower=1))).values}).dropna()
-    roll = roll[roll['t'] >= ERUPTION_END]
+    roll = roll[roll['t'] >= POST_ERUPTION_START]
 
     infl = inflation_roll.dropna().reset_index()
     infl.columns = ['t', 'u']

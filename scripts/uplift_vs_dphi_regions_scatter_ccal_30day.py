@@ -6,12 +6,10 @@ CHANGE-IN-ANGLE variant of uplift_vs_phi_regions_scatter_ccal_30day.py: the y-ax
 change in mean fast direction since the start of re-inflation, dphi = phi - phi_ref, wrapped to
 [-90, 90] deg (axial data), positive = clockwise (azimuth increasing).
 
-Start of re-inflation = ERUPTION_END (2015-05-19), the same start as the plotted post-eruption
-points. NOT the uplift series' own zero point (ref_time from load_daily_series): that currently
-resolves to 2015-05-02, inside the eruption window (despite bpr_inflation_periods_ccal's
-docstring saying 2015-05-18), so a reference window starting there would mix syn-eruption
-events into phi_ref. phi_ref is each region's circular mean of its pooled grade-3 EVENTS in
-[ERUPTION_END, ERUPTION_END + REF_WINDOW_DAYS), REF_WINDOW_DAYS = the 30-day phi rolling window.
+Start of re-inflation = POST_ERUPTION_START (2015-05-02), the post-eruption uplift minimum, which
+is also where every post-eruption figure starts and the zero of the uplift axis. phi_ref is each
+region's circular mean of its pooled grade-3 EVENTS in
+[POST_ERUPTION_START, POST_ERUPTION_START + REF_WINDOW_DAYS), REF_WINDOW_DAYS = the 30-day phi rolling window.
 
 SHARED, CYCLED Y-AXIS: dphi is axial (mod 180), so any 180-deg window [c-90, c+90] is a complete
 view. One window is shared by all three panels; its centre c is chosen automatically
@@ -50,6 +48,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 
 from rose_7period_regions_windowcheck_grade3 import _circular_mean_and_se_deg
 from axec2_uplift_phi_cosine_vs_time import (
@@ -91,7 +90,7 @@ def region_points(members, inflation_roll, ref_start):
                                              window_days=ROLL_WINDOW_DAYS,
                                              min_days=ROLL_MIN_DAYS)
     valid = roll.dropna(subset=['mean_phi'])
-    valid = valid[valid['t'] >= ERUPTION_END]
+    valid = valid[valid['t'] >= POST_ERUPTION_START]
 
     infl_df = inflation_roll.dropna().reset_index()
     infl_df.columns = ['t', 'inflation_m']
@@ -119,12 +118,12 @@ def choose_shared_center(ys, margin=EDGE_MARGIN_DEG):
 def main():
     _dd, _infl_raw, inflation_roll, ref_time, _rd = ccal_infl.load_daily_series()
     print(f'Uplift zero point (ref_time): {ref_time.date()}; dphi reference window starts at '
-          f'ERUPTION_END = {ERUPTION_END.date()}')
+          f'POST_ERUPTION_START = {POST_ERUPTION_START.date()}')
 
     data = []
     for title, subtitle, members in PANELS:
         print(f'{title}: {", ".join(members)}')
-        x, y, se, phi_ref, phi_ref_se, n_ref = region_points(members, inflation_roll, ERUPTION_END)
+        x, y, se, phi_ref, phi_ref_se, n_ref = region_points(members, inflation_roll, POST_ERUPTION_START)
         print(f'    {len(x)} post-eruption rolled points; phi_ref={phi_ref:.1f}+/-{phi_ref_se:.1f}'
               f' deg from {n_ref} events')
         data.append((title, subtitle, members, x, y, se, phi_ref, phi_ref_se, n_ref))

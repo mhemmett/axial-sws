@@ -46,6 +46,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from scipy.signal import lombscargle, find_peaks
 
 from axec2_uplift_phi_cosine_vs_time import ERUPTION_END
@@ -87,7 +88,7 @@ def daily_residuals(members, fit, inflation_roll):
     (t, day_index, n, resid_deg)."""
     with contextlib.redirect_stdout(io.StringIO()):
         pool = load_region_pool(members)
-    pool = pool[pool['t'] >= ERUPTION_END]
+    pool = pool[pool['t'] >= POST_ERUPTION_START]
     d = pool[['t', 'phi_az']].copy()
     d['day'] = d['t'].dt.floor('D')
     ang = 2.0 * np.radians(d['phi_az'].values % 180.0)

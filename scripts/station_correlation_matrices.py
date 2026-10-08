@@ -60,6 +60,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -294,7 +295,7 @@ def main():
     frame = build_series()
     print(f'  frame: {frame.shape[0]} daily rows x {frame.shape[1]} columns\n')
 
-    post = frame[frame.index >= ERUPTION_END]
+    post = frame[frame.index >= POST_ERUPTION_START]
     post_thin = post.iloc[::THIN_DAYS]
     full_thin = frame.iloc[::THIN_DAYS]
 

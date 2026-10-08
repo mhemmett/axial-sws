@@ -13,12 +13,12 @@ ccal_30day.py). Two figures, each 4 rows x 3 columns (West / Central / East):
 
 Periods:
     pre  = start of record (2015-01-22) -> the pre-eruption uplift PEAK
-    syn  = the peak -> the post-eruption uplift MINIMUM (load_daily_series' ref_time, 2015-05-02,
-           inclusive) -- the zero reference of every post-eruption figure.
+    syn  = the peak -> the post-eruption uplift MINIMUM (POST_ERUPTION_START = load_daily_series'
+           ref_time, 2015-05-02) -- the zero reference and START of every post-eruption figure,
+           so pre, syn and post tile the record with no gap or overlap.
 The peak is taken at eruption onset (ERUPTION_START, 2015-04-24 06:00), by user decision: uplift
 was still rising into it (Apr 23 daily mean 2.458 m) and the earlier plateau high (Apr 6,
-2.466 m) is within day-to-day noise of it. NOTE: the post-eruption figures still start at
-ERUPTION_END (2015-05-19), so 2015-05-03 .. 05-18 (earliest re-inflation) is in neither set.
+2.466 m) is within day-to-day noise of it.
 
 Uplift reference: PRE-eruption uplift is relative to the post-eruption minimum, as everywhere
 else (positive, ~2.1-2.45 m). SYN-eruption uplift is relative to the PEAK level -- the mean
@@ -76,7 +76,7 @@ PEAK_REF_HOURS = 24
 RECORD_START = pd.Timestamp('2015-01-22', tz='UTC')
 PEAK_TIME = ERUPTION_START                       # pre-eruption uplift peak (see docstring)
 _MIN_TIME = ccal_infl.load_daily_series()[3]     # post-eruption minimum = post zero reference
-SYN_END = _MIN_TIME + pd.Timedelta(days=1)       # minimum day inclusive
+SYN_END = _MIN_TIME                              # = POST_ERUPTION_START; post figures start here
 PERIODS = [
     ('Pre-eruption', RECORD_START, PEAK_TIME),
     ('Syn-eruption', PEAK_TIME, SYN_END),

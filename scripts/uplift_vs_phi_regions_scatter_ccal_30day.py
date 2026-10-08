@@ -31,6 +31,7 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from bpr_inflation_periods_ccal import POST_ERUPTION_START
 
 from rose_7period_regions_windowcheck_grade3 import _circular_mean_and_se_deg
 from axec2_uplift_phi_cosine_vs_time import (
@@ -90,7 +91,7 @@ def rolled_series(members, inflation_roll):
                                              window_days=ROLL_WINDOW_DAYS,
                                              min_days=ROLL_MIN_DAYS)
     valid = roll.dropna(subset=['mean_phi'])
-    valid = valid[valid['t'] >= ERUPTION_END]
+    valid = valid[valid['t'] >= POST_ERUPTION_START]
 
     infl_df = inflation_roll.dropna().reset_index()
     infl_df.columns = ['t', 'inflation_m']

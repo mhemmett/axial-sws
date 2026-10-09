@@ -1022,6 +1022,43 @@
       "source": "scripts/deformation_figures/def_pre_1_sigma1_grade3.pdf",
       "page": 1,
       "caption": "Best pre-eruption grid (37° vs 54° for Pre-2)."
+    },
+    {
+      "id": "remake-dike-change",
+      "tab": "results",
+      "group": "modeling",
+      "featured": true,
+      "width": 1800,
+      "title": "Rebuilt models: can the 2015 dike explain the 2015 → 2026 rotation?",
+      "source": "dmodels_axial/outputs/two_sphere/dmodels_dike_comparison.png",
+      "caption": "Rebuilt DMODELS-style models (dmodels_axial/: two Mogi spheres after Kidiwela, Okada tensile dike, uniform ridge-normal extension at 110°). Left: observed change in Grade-3 circular-mean φ from pre-eruption (Jan–Apr 2015) to equal-inflation period 5 (from Jan 2021), against the modeled change in σHmax azimuth from pre_2015 (2.4 m inflation + extension) to pre_2026 (2.6 m inflation + the 2015 dike + extension). Inflation alone only changes in amplitude between the two states, so with no extension the modeled change is the dike alone. Right: RMS over six stations as a function of dike opening; the dotted line is the 'nothing changed' null (14.1°). A 2 m dike gets to 12.1° (best 11.9° at 1.5 m) and has the right sign at 4 of 6 stations; both western stations rotate the wrong way."
+    },
+    {
+      "id": "remake-maps-2015",
+      "tab": "results",
+      "group": "modeling",
+      "width": 2200,
+      "title": "Rebuilt model — pre-eruption 2015 (inflation + extension)",
+      "source": "dmodels_axial/outputs/two_sphere/maps_pre_2015.png",
+      "caption": "Uplift and σHmax ticks for the 2015 pre-eruption state: two-sphere inflation calibrated to 2.4 m at the Central Caldera node plus ridge-normal extension accumulated over 4 years, at no, moderate and high extension rate."
+    },
+    {
+      "id": "remake-maps-2026",
+      "tab": "results",
+      "group": "modeling",
+      "width": 2200,
+      "title": "Rebuilt model — pre-eruption 2026 (inflation + 2015 dike + extension)",
+      "source": "dmodels_axial/outputs/two_sphere/maps_pre_2026.png",
+      "caption": "As above for 2026: 2.6 m of re-inflation since the 2015 minimum, the 2015 dike (red; Baillard's dike_syn_1 trace, 0.1–2.0 km deep, 2 m opening) and 11 years of extension."
+    },
+    {
+      "id": "remake-azimuth-vs-extension",
+      "tab": "results",
+      "group": "modeling",
+      "width": 2200,
+      "title": "Rebuilt model — station σHmax azimuth vs extension rate",
+      "source": "dmodels_axial/outputs/two_sphere/station_azimuth_vs_extension.png",
+      "caption": "Predicted σHmax azimuth at each station for both states as the extension rate grows. At plate-rate-scale strain (a few ×1e-6 /yr) extension barely moves any station; it only takes over at ≥3e-5 /yr, where it makes the fit to the observed change worse."
     }
   ]
 }

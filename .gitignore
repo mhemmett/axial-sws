@@ -95,3 +95,7 @@ swspy/docs/build/
 # ...but still never track build/OS cruft that lands inside site/.
 site/**/__pycache__/
 site/**/.DS_Store
+
+# DMODELS remake summary figures are tracked deliverables (the grids they come from stay
+# in the ignored Axial_Deformation/); re-include them past the blanket *.png rule above.
+!dmodels_axial/outputs/**/*.png

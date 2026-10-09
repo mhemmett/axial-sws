@@ -58,7 +58,7 @@ from atan2_uplift_vs_phi_sixstations_ccal_30day import (
 )
 from atan2_uplift_vs_phi_regions_ccal_30day import load_region_pool
 from uplift_vs_phi_regions_scatter_ccal_30day import PANELS, STATION_COLORS
-from uplift_vs_aniso_regions_scatter_ccal_30day import travel_times, ll2xy, rolled
+from uplift_vs_aniso_regions_scatter_ccal_30day import travel_times, tt_key, ll2xy, rolled
 from animate_arctan_stress_vectors import load_station_xy
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -78,30 +78,14 @@ def load_events(tt=None):
     members = [m for _, _, mem in PANELS for m in mem]
     with contextlib.redirect_stdout(io.StringIO()):
         pool = load_region_pool(members)
-    pool = pool.assign(event_id=pool['event_id'].astype(str)).merge(
-        tt.assign(event_id=tt['event_id'].astype(str)), on=['station', 'event_id'], how='inner')
+    # keyed on event_id + origin time: event_id repeats across the 2015-21 / 2022-26 files
+    pool = pool.assign(key=tt_key(pool)).merge(tt, on=['station', 'key'], how='inner')
     pool['x'], pool['y'] = ll2xy(pool['latitude'].values, pool['longitude'].values)
     pool['z'] = pool['depth'].values
     for sta in members:
         sx, sy = load_station_xy(sta)
         m = pool['station'] == sta
         pool.loc[m, 'sx'], pool.loc[m, 'sy'] = float(sx), float(sy)
-    # event_id restarts between the 2015-2021 and 2022-2026 files, so (station, event_id) is not
-    # unique and the travel-time cache holds one T_S per key (that of the first-listed event).
-    # Recompute T_S from the eikonal field for every event in a colliding key.
-    dup = pool.duplicated(['station', 'event_id'], keep=False).values
-    if dup.any():
-        from pykonal_raytracer import BaillardRayTracer
-        tracer = BaillardRayTracer()
-        for sta in pool.loc[dup, 'station'].unique():
-            m = dup & (pool['station'] == sta).values
-            tracer.precompute_station(sta, pool.loc[m, 'sx'].iloc[0], pool.loc[m, 'sy'].iloc[0])
-            f = tracer._tt[sta]
-            pool.loc[m, 'T_s'] = [float(f.value(np.array([x, y, z], dtype=float)))
-                                  if 0.0 <= z <= 4.0 else np.nan
-                                  for x, y, z in zip(pool.loc[m, 'x'], pool.loc[m, 'y'],
-                                                     pool.loc[m, 'z'])]
-        print(f'Recomputed T_S for {int(dup.sum()):,} events whose (station, event_id) collides')
     pool = pool[pool['t'] >= POST_ERUPTION_START].copy()
     pool['A_pct'] = pool['dt'] / pool['T_s'] * 100.0
     return pool.dropna(subset=['x', 'y', 'z', 'A_pct']).reset_index(drop=True)

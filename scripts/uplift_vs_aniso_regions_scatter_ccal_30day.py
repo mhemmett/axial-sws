@@ -13,8 +13,11 @@ travel-time field through the Baillard 3D S-velocity model (pykonal_raytracer.Ba
 the production incidence-angle tracer; field solved from each station at the seafloor, event at
 `depth` km below seafloor, 0-4 km, exactly as the production build_raw_* scripts do). This is
 the exact first-arrival time, rather than sws_percent_anisotropy.py's r / mean(Vs) proxy.
-Travel times are cached to results/pykonal_s_travel_times_grade3.csv (new file; recomputed only
-if missing).
+Travel times are cached to results/pykonal_s_travel_times_grade3_v2.csv (recomputed only if
+missing), keyed on (station, event_id, origin time): event_id restarts between the 2015-2021 and
+2022-2026 files, so (station, event_id) alone is not unique. The earlier cache
+(pykonal_s_travel_times_grade3.csv) was keyed on event_id only and gave every colliding 2022-2026
+event the T_S of a 2015 event; it is left in place but no longer read.
 
 Normalising by T_S removes the part of dt that is just "longer path, more delay". To show
 whether the dt trends ARE path-length driven, each panel also reports r with uplift for dt, A and
@@ -57,7 +60,7 @@ import bpr_inflation_periods_ccal as ccal_infl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_BASE = os.path.join(HERE, 'uplift_vs_aniso_regions_scatter_ccal_30day')
-TT_CACHE = os.path.join(HERE, '..', 'results', 'pykonal_s_travel_times_grade3.csv')
+TT_CACHE = os.path.join(HERE, '..', 'results', 'pykonal_s_travel_times_grade3_v2.csv')
 # AXEC2's 2015-2021 windowcheck CSV carries no hypocentres; they come from the raw-batch metadata
 # the run was built from (same event_id scheme; origin times verified identical for all 91,710).
 AXEC2_META = os.path.join(HERE, 'raw_axec2_all_batches_mfast_filters_data',
@@ -75,8 +78,13 @@ def ll2xy(lat, lon):
             (np.asarray(lat) - INI_LAT) * KM_PER_DEG_LAT)
 
 
+def tt_key(df):
+    """Join key for the travel-time cache: event_id is only unique together with origin time."""
+    return df['event_id'].astype(str) + '|' + df['t'].astype(str)
+
+
 def travel_times():
-    """{(station, event_id): T_S seconds} for every Grade-3 measurement, cached."""
+    """Table of (station, key, T_S seconds) for every Grade-3 event, cached; key = tt_key()."""
     if os.path.exists(TT_CACHE):
         tt = pd.read_csv(TT_CACHE)
         print(f'Loaded {len(tt):,} cached travel times from {TT_CACHE}')
@@ -88,7 +96,7 @@ def travel_times():
         sx, sy = load_station_xy(sta)
         tracer.precompute_station(sta, float(sx), float(sy))
         field = tracer._tt[sta]
-        df = apply_grade(load_station_raw(sta), GRADE).drop_duplicates('event_id')
+        df = apply_grade(load_station_raw(sta), GRADE).drop_duplicates(['event_id', 't'])
         if sta == 'AXEC2':
             meta = pd.read_csv(AXEC2_META, usecols=['event_id', 'latitude', 'longitude', 'depth'])
             meta = meta.set_index('event_id')
@@ -99,7 +107,7 @@ def travel_times():
         ex, ey = ll2xy(df['latitude'].values, df['longitude'].values)
         ez = df['depth'].values
         n_bad = 0
-        for eid, x, y, z in zip(df['event_id'].values, ex, ey, ez):
+        for eid, x, y, z in zip(tt_key(df).values, ex, ey, ez):
             if not (0.0 <= z <= Z_MAX_KM):
                 n_bad += 1
                 continue
@@ -112,7 +120,7 @@ def travel_times():
                 continue
             rows.append((sta, eid, t))
         print(f'  {sta}: {len(df) - n_bad:,} travel times ({n_bad} out of model / depth range)')
-    tt = pd.DataFrame(rows, columns=['station', 'event_id', 'T_s'])
+    tt = pd.DataFrame(rows, columns=['station', 'key', 'T_s'])
     os.makedirs(os.path.dirname(TT_CACHE), exist_ok=True)
     tt.to_csv(TT_CACHE, index=False)
     print(f'Cached {len(tt):,} travel times to {TT_CACHE}')
@@ -141,10 +149,7 @@ def rolled(pool, col, inflation_roll):
 def series(members, tt, inflation_roll):
     with contextlib.redirect_stdout(io.StringIO()):
         pool = load_region_pool(members)
-    # event_id is int for most stations but 'batch_index' strings for AXEC2 2015-21: join as str
-    pool = pool.assign(event_id=pool['event_id'].astype(str))
-    pool = pool.merge(tt.assign(event_id=tt['event_id'].astype(str)),
-                      on=['station', 'event_id'], how='inner')
+    pool = pool.assign(key=tt_key(pool)).merge(tt, on=['station', 'key'], how='inner')
     pool['A_pct'] = pool['dt'] / pool['T_s'] * 100.0
     xA, yA, seA = rolled(pool, 'A_pct', inflation_roll)
     xd, yd, _ = rolled(pool, 'dt', inflation_roll)

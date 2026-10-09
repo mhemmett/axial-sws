@@ -500,6 +500,42 @@ window.AXIAL_FIGURES = [
     "height": 1563
   },
   {
+    "id": "geo-migration-null",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Is the anisotropy–uplift trend source migration? Location-matched null",
+    "caption": "Post-eruption hypocentres deepen as the caldera re-inflates at every station (≈0.1–0.2 km West, ≈0.35–0.45 km East and AXCC1), so a fixed anisotropy field sampled by migrating rays could mimic a stress-driven trend. Each event is predicted from the leave-one-year-out mean A of its own 0.25 km hypocentre cell (per station), and the prediction is rolled and fitted exactly like the data (dashed). West average: observed +0.77 %/m, location alone +0.30, residual +0.47; East average −0.22 / −0.08 / −0.14; AXCC1 −0.13 / −0.05 / −0.09 (0.5 km cells agree). Bottom row: observed slope against 1,000 within-cell permutations. A positive-control injection shows the leave-one-year-out prediction absorbs ≈25–30% of a genuine change (so the residual is a lower bound), and the permutation p-values are unreliable at the ≈0.1 %/m level of the East and AXCC1 slopes — use the synthetic and bootstrap spreads in the next two figures for those.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-migration-null.webp",
+    "width": 2200,
+    "height": 1973
+  },
+  {
+    "id": "geo-migration-synthetic",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Static-anisotropy synthetics through the real, migrating rays",
+    "caption": "Every post-eruption Grade 3 event–station ray is traced through the Baillard 3-D Vs model (PyKonal) and forward-modelled through anisotropy fields that do not change in time: uniform, shallow-concentrated (exp(−z/0.5 km)), deep-increasing (z + 0.1 km), and a 3-D field back-projected from the observed A (leave-one-year-out). Synthetics get each event's dt_error as noise, the 10 ms dt grid and the dt ≤ T_dom/2 cut, 20 realisations (top: mean ± 2σ; bottom: one realisation). West average: observed +0.83 %/m, static fields +0.06 to +0.12. East average: observed −0.16, static fields +0.15 to −0.09 (shallow-concentrated reproduces about half). AXCC1 depends on the assumed depth profile (−0.24 shallow, +0.27 deep). The uniform field gives ≈0, so grid and selection alone make no trend; the pink control (back-projected field plus an injected West change) is recovered.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-migration-synthetic.webp",
+    "width": 2200,
+    "height": 1414
+  },
+  {
+    "id": "geo-migration-kz",
+    "tab": "results",
+    "group": "geodetic",
+    "title": "Fitted depth profile of anisotropy and the migration-corrected uplift trend",
+    "caption": "Left three panels: fractional S anisotropy k(z) per region fitted to δt from each ray's S time in 0.25 km depth layers (non-negative least squares; 95% intervals from resampling calendar months). Solid: k(z) alone; dashed: k(z) jointly with a uniform uplift term g. The two profiles nearly coincide, so the deepening of events is not distorting the profile. The top 0.25 km carries ≈6.5–8% everywhere; the West stays at ≈2–2.8% through 0.25–1.25 km where the East is lower. Right: migration through the fitted k(z) predicts West +0.06, AXCC1 −0.08, East −0.06 %/m. The migration-corrected change (100g) is West +0.59 [+0.45, +0.70] %/m, AXCC1 +0.07 [−0.30, +0.28], East −0.07 [−0.18, +0.03]. The West increase in anisotropy with inflation is genuine; AXCC1 is consistent with source migration; the East decrease is about one-third migration and the remainder is not distinguishable from zero.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/geo-migration-kz.webp",
+    "width": 2200,
+    "height": 820
+  },
+  {
     "id": "geo-regions3-fit",
     "tab": "results",
     "group": "geodetic",

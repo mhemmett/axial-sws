@@ -66,7 +66,7 @@ from animate_arctan_stress_vectors import compute_optimal_wrap, compute_full_ran
 from uplift_vs_phi_regions_scatter_ccal_30day import (
     PANELS, POINT_COLOR, STATION_COLORS, STATION_ALPHA,
 )
-from uplift_vs_aniso_regions_scatter_ccal_30day import travel_times
+from uplift_vs_aniso_regions_scatter_ccal_30day import travel_times, tt_key
 import bpr_inflation_periods_ccal as ccal_infl
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -163,15 +163,13 @@ def coverage_note(pool, t0, t1):
 
 def load_pools(tt):
     pools = {}
-    ttm = tt.assign(event_id=tt['event_id'].astype(str))
     for _title, _sub, members in PANELS:
         for key in [tuple(members)] + [(m,) for m in members]:
             if key in pools:
                 continue
             with contextlib.redirect_stdout(io.StringIO()):
                 pool = load_region_pool(list(key))
-            pool = pool.assign(event_id=pool['event_id'].astype(str))
-            pool = pool.merge(ttm, on=['station', 'event_id'], how='left')
+            pool = pool.assign(key=tt_key(pool)).merge(tt, on=['station', 'key'], how='left')
             pool['A_pct'] = pool['dt'] / pool['T_s'] * 100.0
             pools[key] = pool
     return pools

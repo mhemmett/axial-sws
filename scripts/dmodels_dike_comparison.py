@@ -147,7 +147,8 @@ def main():
         k_best = OPENING_SCALES[int(np.argmin(scan))]
         for i, sta in enumerate(STATIONS):
             rows.append(dict(rate_per_yr=rate, station=sta,
-                             phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_p5_obs=obs.loc[sta, 'phi_p5'],
+                             phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_pre_se=obs.loc[sta, 'se_pre'],
+                             phi_p5_obs=obs.loc[sta, 'phi_p5'], phi_p5_se=obs.loc[sta, 'se_p5'],
                              dphi_obs=d_obs[i], dphi_obs_se=obs.loc[sta, 'dphi_obs_se'],
                              az_2015=az15[i], az_2026=az26[i], az_2026_nodike=az26n[i],
                              dphi_model_dike=d_dike[i], dphi_model_nodike=d_nodike[i]))

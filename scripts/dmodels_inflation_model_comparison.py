@@ -15,6 +15,8 @@ Outputs (dmodels_axial/outputs/model_comparison/):
                              absolute sigma_Hmax azimuths for every model
     summary.csv              per model and extension rate: RMS misfits, sign agreement,
                              best-fitting dike opening
+    station_tables.md        the change and both states, observed (± standard error) vs
+                             each model, with no extension
     model_comparison.png
 
 Run with:
@@ -77,9 +79,13 @@ def main():
             for i, sta in enumerate(ddc.STATIONS):
                 station_rows.append(dict(
                     model=m, rate_per_yr=rate, station=sta,
-                    phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_p5_obs=obs.loc[sta, 'phi_p5'],
+                    phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_pre_se=obs.loc[sta, 'se_pre'],
+                    phi_p5_obs=obs.loc[sta, 'phi_p5'], phi_p5_se=obs.loc[sta, 'se_p5'],
                     dphi_obs=d_obs[i], dphi_obs_se=obs.loc[sta, 'dphi_obs_se'],
-                    az_2015=az15[i], az_2026=az26[i], dphi_model=d_mod[i]))
+                    az_2015=az15[i], az_2026=az26[i], dphi_model=d_mod[i],
+                    misfit_2015=float(ddc.wrap90(az15[i] - obs.loc[sta, 'phi_pre'])),
+                    misfit_2026=float(ddc.wrap90(az26[i] - obs.loc[sta, 'phi_p5'])),
+                    misfit_dphi=float(ddc.wrap90(d_mod[i] - d_obs[i]))))
 
     stations = pd.DataFrame(station_rows)
     summary = pd.DataFrame(summary_rows)
@@ -89,12 +95,48 @@ def main():
 
     pd.set_option('display.width', 200)
     print(summary.to_string(index=False, float_format=lambda v: f'{v:.3g}'))
-    wide = stations[np.isclose(stations.rate_per_yr, PLOT_RATE)].pivot(
-        index='station', columns='model', values='dphi_model')[MODELS]
-    wide.insert(0, 'observed', obs['dphi_obs'])
-    print(f'\nChange per station, no extension, 2 m dike:\n{wide.round(1).to_string()}')
+    md = station_tables(stations, summary, obs, args.p5_start)
+    with open(os.path.join(OUT_DIR, 'station_tables.md'), 'w') as fh:
+        fh.write(md)
+    print('\n' + md)
 
     plot(stations, obs, scans, args.p5_start)
+
+
+def station_tables(stations, summary, obs, p5_start):
+    """Markdown tables at PLOT_RATE: the change, then each state, observed (circular mean
+    +- its standard error) against every model. Model cells show the modeled sigma_Hmax
+    azimuth with its axial misfit (model - observed, wrapped to +-90) in parentheses."""
+    sub = stations[np.isclose(stations.rate_per_yr, PLOT_RATE)]
+    summ = summary[np.isclose(summary.rate_per_yr, PLOT_RATE)].set_index('model')
+    cell = {m: sub[sub.model == m].set_index('station') for m in MODELS}
+    head = '| Station | Observed | ' + ' | '.join(MODELS) + ' |\n|---|---|' + '---|' * len(MODELS)
+
+    def table(obs_col, se_col, model_col, misfit_col, rms_col, signed):
+        fmt = '{:+.1f}°' if signed else '{:.1f}°'
+        rows = [head]
+        for sta in ddc.STATIONS:
+            o = fmt.format(obs.loc[sta, obs_col]) + f' ± {obs.loc[sta, se_col]:.1f}°'
+            ms = [fmt.format(cell[m].loc[sta, model_col])
+                  + f' ({cell[m].loc[sta, misfit_col]:+.1f})' for m in MODELS]
+            rows.append(f'| {sta} | {o} | ' + ' | '.join(ms) + ' |')
+        rows.append('| **RMS misfit** | | '
+                    + ' | '.join(f'**{summ.loc[m, rms_col]:.1f}°**' for m in MODELS) + ' |')
+        return '\n'.join(rows)
+
+    return (
+        f'Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present = '
+        f'equal-inflation period 5 (from {p5_start}). Models: 2 m dike, no extension. '
+        f'Model cells: modeled value (model - observed, wrapped to ±90°).\n\n'
+        f'### Change, present - pre-eruption 2015 (Δφ)\n\n'
+        + table('dphi_obs', 'dphi_obs_se', 'dphi_model', 'misfit_dphi',
+                'rms_change_2m_dike', True)
+        + f'\n\n"Nothing changed" scores {ddc.rms(obs.dphi_obs.values):.1f}° RMS.\n\n'
+        f'### Pre-eruption 2015: observed φ vs modeled σHmax (pre_2015)\n\n'
+        + table('phi_pre', 'se_pre', 'az_2015', 'misfit_2015', 'rms_abs_2015', False)
+        + '\n\n### Present (period 5): observed φ vs modeled σHmax (pre_2026)\n\n'
+        + table('phi_p5', 'se_p5', 'az_2026', 'misfit_2026', 'rms_abs_2026', False)
+        + '\n')
 
 
 def plot(stations, obs, scans, p5_start):

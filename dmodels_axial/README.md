@@ -87,7 +87,7 @@ inflation source only changes in amplitude, so the modelled change is then the d
 
 Generated in `outputs/model_comparison/station_tables.md`. Values are circular means ± standard error, with a 2 m dike and no extension. Model cells show the modelled σHmax azimuth, with the misfit (model − observed, wrapped to ±90°) in brackets.
 
-#### Change, present - pre-eruption 2015 (Δφ)
+#### Change, present − pre-eruption 2015 (Δφ)
 
 | Station | Observed | two_sphere | yang | yang_reversed |
 |---|---|---|---|---|

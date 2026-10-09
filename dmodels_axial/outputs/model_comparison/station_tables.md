@@ -1,6 +1,6 @@
-Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present = equal-inflation period 5 (from 2021-01-01). Models: 2 m dike, no extension. Model cells: modeled value (model - observed, wrapped to ±90°).
+Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present = equal-inflation period 5 (from 2021-01-01). Models: 2 m dike, no extension. Model cells: modeled value (model - observed, wrapped to ±90°). "Nothing changed" scores 14.1° RMS on Δφ.
 
-### Change, present - pre-eruption 2015 (Δφ)
+### Change, present − pre-eruption 2015 (Δφ)
 
 | Station | Observed | two_sphere | yang | yang_reversed |
 |---|---|---|---|---|
@@ -11,8 +11,6 @@ Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present =
 | AXEC2 | +2.6° ± 0.4° | +12.9° (+10.4) | +32.4° (+29.8) | +3.3° (+0.7) |
 | AXEC3 | +10.0° ± 0.5° | +10.3° (+0.3) | +18.7° (+8.7) | +1.3° (-8.7) |
 | **RMS misfit** | | **12.1°** | **24.2°** | **24.5°** |
-
-"Nothing changed" scores 14.1° RMS.
 
 ### Pre-eruption 2015: observed φ vs modeled σHmax (pre_2015)
 

@@ -17,6 +17,7 @@ Outputs (dmodels_axial/outputs/model_comparison/):
                              best-fitting dike opening
     station_tables.md        the change and both states, observed (± standard error) vs
                              each model, with no extension
+    station_tables.html      the same tables as an HTML fragment for site/content.js
     model_comparison.png
 
 Run with:
@@ -98,45 +99,83 @@ def main():
     md = station_tables(stations, summary, obs, args.p5_start)
     with open(os.path.join(OUT_DIR, 'station_tables.md'), 'w') as fh:
         fh.write(md)
+    with open(os.path.join(OUT_DIR, 'station_tables.html'), 'w') as fh:
+        fh.write(station_tables_html(stations, summary, obs) + '\n')
     print('\n' + md)
 
     plot(stations, obs, scans, args.p5_start)
 
 
-def station_tables(stations, summary, obs, p5_start):
-    """Markdown tables at PLOT_RATE: the change, then each state, observed (circular mean
-    +- its standard error) against every model. Model cells show the modeled sigma_Hmax
-    azimuth with its axial misfit (model - observed, wrapped to +-90) in parentheses."""
+TABLES = [  # title, observed column, its SE, model column, misfit column, RMS column, signed
+    ('Change, present − pre-eruption 2015 (Δφ)',
+     'dphi_obs', 'dphi_obs_se', 'dphi_model', 'misfit_dphi', 'rms_change_2m_dike', True),
+    ('Pre-eruption 2015: observed φ vs modeled σHmax (pre_2015)',
+     'phi_pre', 'se_pre', 'az_2015', 'misfit_2015', 'rms_abs_2015', False),
+    ('Present (period 5): observed φ vs modeled σHmax (pre_2026)',
+     'phi_p5', 'se_p5', 'az_2026', 'misfit_2026', 'rms_abs_2026', False),
+]
+
+
+def table_cells(stations, summary, obs):
+    """Formatted cells at PLOT_RATE for each of TABLES: per station the observed circular
+    mean +- its standard error, and per model the modeled sigma_Hmax azimuth with its axial
+    misfit (model - observed, wrapped to +-90); then the RMS misfit per model."""
     sub = stations[np.isclose(stations.rate_per_yr, PLOT_RATE)]
     summ = summary[np.isclose(summary.rate_per_yr, PLOT_RATE)].set_index('model')
     cell = {m: sub[sub.model == m].set_index('station') for m in MODELS}
-    head = '| Station | Observed | ' + ' | '.join(MODELS) + ' |\n|---|---|' + '---|' * len(MODELS)
-
-    def table(obs_col, se_col, model_col, misfit_col, rms_col, signed):
+    out = []
+    for title, oc, sc, mc, fc, rc, signed in TABLES:
         fmt = '{:+.1f}°' if signed else '{:.1f}°'
-        rows = [head]
+        rows = []
         for sta in ddc.STATIONS:
-            o = fmt.format(obs.loc[sta, obs_col]) + f' ± {obs.loc[sta, se_col]:.1f}°'
-            ms = [fmt.format(cell[m].loc[sta, model_col])
-                  + f' ({cell[m].loc[sta, misfit_col]:+.1f})' for m in MODELS]
-            rows.append(f'| {sta} | {o} | ' + ' | '.join(ms) + ' |')
-        rows.append('| **RMS misfit** | | '
-                    + ' | '.join(f'**{summ.loc[m, rms_col]:.1f}°**' for m in MODELS) + ' |')
-        return '\n'.join(rows)
+            observed = (fmt.format(obs.loc[sta, oc]), f'± {obs.loc[sta, sc]:.1f}°')
+            modeled = [(fmt.format(cell[m].loc[sta, mc]), f'{cell[m].loc[sta, fc]:+.1f}')
+                       for m in MODELS]
+            rows.append((sta, observed, modeled))
+        out.append((title, rows, [f'{summ.loc[m, rc]:.1f}°' for m in MODELS]))
+    return out
 
-    return (
-        f'Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present = '
-        f'equal-inflation period 5 (from {p5_start}). Models: 2 m dike, no extension. '
-        f'Model cells: modeled value (model - observed, wrapped to ±90°).\n\n'
-        f'### Change, present - pre-eruption 2015 (Δφ)\n\n'
-        + table('dphi_obs', 'dphi_obs_se', 'dphi_model', 'misfit_dphi',
-                'rms_change_2m_dike', True)
-        + f'\n\n"Nothing changed" scores {ddc.rms(obs.dphi_obs.values):.1f}° RMS.\n\n'
-        f'### Pre-eruption 2015: observed φ vs modeled σHmax (pre_2015)\n\n'
-        + table('phi_pre', 'se_pre', 'az_2015', 'misfit_2015', 'rms_abs_2015', False)
-        + '\n\n### Present (period 5): observed φ vs modeled σHmax (pre_2026)\n\n'
-        + table('phi_p5', 'se_p5', 'az_2026', 'misfit_2026', 'rms_abs_2026', False)
-        + '\n')
+
+def caption(obs, p5_start):
+    return (f'Grade 3, circular mean ± standard error; pre-eruption = Jan-Apr 2015, present = '
+            f'equal-inflation period 5 (from {p5_start}). Models: 2 m dike, no extension. '
+            f'Model cells: modeled value (model - observed, wrapped to ±90°). '
+            f'"Nothing changed" scores {ddc.rms(obs.dphi_obs.values):.1f}° RMS on Δφ.')
+
+
+def station_tables(stations, summary, obs, p5_start):
+    """The TABLES as markdown."""
+    head = '| Station | Observed | ' + ' | '.join(MODELS) + ' |\n|---|---|' + '---|' * len(MODELS)
+    parts = [caption(obs, p5_start)]
+    for title, rows, rms_row in table_cells(stations, summary, obs):
+        lines = [f'### {title}', '', head]
+        for sta, (o, se), modeled in rows:
+            lines.append(f'| {sta} | {o} {se} | '
+                         + ' | '.join(f'{v} ({d})' for v, d in modeled) + ' |')
+        lines.append('| **RMS misfit** | | ' + ' | '.join(f'**{r}**' for r in rms_row) + ' |')
+        parts.append('\n'.join(lines))
+    return '\n\n'.join(parts) + '\n'
+
+
+def station_tables_html(stations, summary, obs):
+    """The TABLES as an HTML fragment for the site (styled by .data-table in index.html)."""
+    def minus(t):
+        return t.replace('-', '\u2212')
+    head = ''.join(f'<th>{LABELS[m]}</th>' for m in MODELS)
+    parts = []
+    for title, rows, rms_row in table_cells(stations, summary, obs):
+        body = []
+        for sta, (o, se), modeled in rows:
+            tds = ''.join(f'<td>{minus(v)} <span class="mis">({minus(d)})</span></td>'
+                          for v, d in modeled)
+            body.append(f'<tr><th>{sta}</th><td>{minus(o)} <span class="se">{se}</span></td>'
+                        f'{tds}</tr>')
+        rms = ''.join(f'<td>{r}</td>' for r in rms_row)
+        body.append(f'<tr class="rms"><th>RMS misfit</th><td></td>{rms}</tr>')
+        parts.append(f'<div class="table-wrap"><table class="data-table"><caption>{title}'
+                     f'</caption><thead><tr><th>Station</th><th>Observed</th>{head}</tr></thead>'
+                     f'<tbody>{"".join(body)}</tbody></table></div>')
+    return ''.join(parts)
 
 
 def plot(stations, obs, scans, p5_start):

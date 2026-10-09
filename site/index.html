@@ -212,6 +212,36 @@
     background: var(--bg3); padding: 1px 5px; color: var(--text);
   }
 
+  /* ═══ DATA TABLES ═══ wider than .prose so five columns fit; scroll on narrow screens */
+  .prose .table-wrap {
+    width: min(960px, calc(100vw - 2.5rem)); overflow-x: auto;
+    margin: 0 0 1.6rem; border: 1px solid var(--border2); border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .data-table {
+    border-collapse: collapse; width: 100%; min-width: 640px;
+    font-family: var(--font-mono); font-size: 0.74rem; color: var(--text);
+  }
+  .data-table caption {
+    caption-side: top; text-align: left; padding: 0.7rem 0.9rem 0.5rem;
+    max-width: calc(100vw - 2.5rem);  /* wrap inside the visible part when the table scrolls */
+    font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600; color: var(--text);
+  }
+  .data-table th, .data-table td {
+    padding: 0.42rem 0.9rem; border-top: 1px solid var(--border2);
+    text-align: right; white-space: nowrap;
+  }
+  .data-table thead th {
+    background: var(--bg3); color: var(--text2); font-weight: 400;
+    white-space: normal; vertical-align: bottom;
+  }
+  .data-table th:first-child { text-align: left; }
+  .data-table tbody th { font-weight: 400; color: var(--text2); }
+  .data-table .se, .data-table .mis { color: var(--text3); }
+  .data-table tr.rms th, .data-table tr.rms td {
+    border-top: 1px solid var(--border); color: var(--accent-deep);
+  }
+
   /* ═══ CALLOUT ═══ */
   .callout {
     border-left: 3px solid var(--accent);

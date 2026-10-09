@@ -4,7 +4,8 @@ function c = axial_disp_components(x_km, y_km, p)
 %   c = axial_disp_components(x_km, y_km, p)
 %
 %   Everything is linear, so each scenario is a weighted sum of these:
-%     c.infl  inflation sources with 1 m^3 total volume change (split by p.inflation.weight)
+%     c.infl  the inflation source at unit amplitude: 1 m^3 total volume change for
+%             'two_sphere' (split by p.inflation.weight), P/mu = 1 for 'yang'
 %     c.dike  the 2015 dike at its full p.dike.opening_m
 %     c.ext   uniaxial extension of unit strain along p.extension.azimuth_deg
 %   Each has fields ux, uy, uz (east, north, up), the same size as x_km.
@@ -13,14 +14,23 @@ nu = p.elastic.nu;
 xm = x_km * 1000;
 ym = y_km * 1000;
 
-% Inflation: Mogi spheres
-w = p.inflation.weight / sum(p.inflation.weight);
+% Inflation: unit amplitude (1 m^3 total for the Mogi spheres, P/mu = 1 for Yang)
 c.infl = zero_field(xm);
-for k = 1:numel(w)
-    [ux, uy, uz] = mogi_disp(xm, ym, p.inflation.x_km(k) * 1000, ...
-                             p.inflation.y_km(k) * 1000, ...
-                             p.inflation.depth_km(k) * 1000, w(k), nu);
-    c.infl = add_field(c.infl, ux, uy, uz);
+switch p.inflation.model
+    case 'two_sphere'
+        w = p.inflation.weight / sum(p.inflation.weight);
+        for k = 1:numel(w)
+            [ux, uy, uz] = mogi_disp(xm, ym, p.inflation.x_km(k) * 1000, ...
+                                     p.inflation.y_km(k) * 1000, ...
+                                     p.inflation.depth_km(k) * 1000, w(k), nu);
+            c.infl = add_field(c.infl, ux, uy, uz);
+        end
+    case 'yang'
+        s = p.yang;
+        [ux, uy, uz] = yang_disp(xm, ym, s.x_km * 1000, s.y_km * 1000, s.depth_km * 1000, ...
+                                 s.a_km * 1000, s.b_km * 1000, s.strike_deg, ...
+                                 s.plunge_deg, 1, nu);
+        c.infl = add_field(c.infl, ux, uy, uz);
 end
 
 % Dike: Okada rectangle, trace defined like get_fault_coord (math angle)

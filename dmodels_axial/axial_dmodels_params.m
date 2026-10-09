@@ -1,5 +1,13 @@
-function p = axial_dmodels_params()
+function p = axial_dmodels_params(model)
 %AXIAL_DMODELS_PARAMS Every physical and numerical input to run_axial_dmodels.m.
+%
+%   p = axial_dmodels_params(model)
+%
+%   model selects the inflation source ('two_sphere' by default):
+%     'two_sphere'  Kidiwela two-sphere Mogi model
+%     'yang'        Baillard's single Yang (1988) prolate spheroid
+%     'yang_reversed'  the same spheroid with the axis direction reversed (strike 106),
+%                   a check on the ambiguous orientation (see below)
 %
 %   Two pre-eruption states of the caldera, each relative to the deflated state
 %   right after the previous eruption:
@@ -10,6 +18,13 @@ function p = axial_dmodels_params()
 %
 %   Values marked ASSUMED are placeholders with a stated provenance, not fitted
 %   results; check them before treating the grids as final.
+
+if nargin < 1
+    model = 'two_sphere';
+end
+if ~any(strcmp(model, {'two_sphere', 'yang', 'yang_reversed'}))
+    error('axial_dmodels_params:model', 'Unknown inflation model ''%s''', model);
+end
 
 % ---------------------------------------------------------------- frame / grid
 % Same local frame as scripts/projection.py::ll2xy (UTM zone 9 minus this origin)
@@ -38,13 +53,36 @@ p.uplift_ref.lon = -130.0089;
 p.uplift_ref.lat = 45.95468;
 
 % ---------------------------------------------------------------- inflation
-% Kidiwela two-sphere Mogi model (scripts/mogi_stress_model.py::SPHERES), local km.
-% Only the geometry and the relative strength (dP * R^3) are used; the total
-% volume is rescaled per scenario to hit the uplift target at uplift_ref.
+% Either source is rescaled per scenario to hit the uplift target at uplift_ref, so
+% only its geometry (and, for two_sphere, the relative strength) matters.
+p.inflation.model = model;
+if strncmp(model, 'yang', 4)
+    p.inflation.model = 'yang';
+end
+
+% two_sphere: Kidiwela two-sphere Mogi model (scripts/mogi_stress_model.py::SPHERES),
+% local km, relative strength dP * R^3
 p.inflation.x_km = [7.57, 7.53];
 p.inflation.y_km = [4.55, 6.60];
 p.inflation.depth_km = [3.33, 1.25];
 p.inflation.weight = [0.43^3, 0.20^3];
+
+% yang: Baillard's prolate spheroid (scripts/baillard_simple_model.py header: major axis
+% plunging 77 deg toward azimuth 286). Passed as the dMODELS theta/phi: the plunge is from
+% horizontal (that file's "77 deg -> ~4.28 km vertical extent") and the axis plunges
+% toward the strike azimuth, so strike 286 is the stated geometry. baillard_simple_model.py's
+% own code measures the angle from vertical instead - an inconsistency in that file - so
+% the opposite plunge direction (strike 106) is kept as the 'yang_reversed' check.
+p.yang.x_km = 8.84;
+p.yang.y_km = 5.38;
+p.yang.depth_km = 3.81;
+p.yang.a_km = 2.20;
+p.yang.b_km = 0.38;
+p.yang.strike_deg = 286;
+p.yang.plunge_deg = 77;
+if strcmp(model, 'yang_reversed')
+    p.yang.strike_deg = mod(p.yang.strike_deg + 180, 360);
+end
 
 % ---------------------------------------------------------------- 2015 dike
 % ASSUMED: surface trace of Baillard's 'dike_syn_1' (scripts/deformation_analysis.py:
@@ -85,6 +123,6 @@ p.scenarios(2).include_dike = true;
 % ---------------------------------------------------------------- output
 here = fileparts(mfilename('fullpath'));
 % Grids are data (gitignored); tables and figures go to the tracked outputs/ folder
-p.out_dir = fullfile(here, '..', 'Axial_Deformation', 'remake_2015_2026');
-p.summary_dir = fullfile(here, 'outputs', 'two_sphere');
+p.out_dir = fullfile(here, '..', 'Axial_Deformation', 'remake_2015_2026', model);
+p.summary_dir = fullfile(here, 'outputs', model);
 end

@@ -1310,5 +1310,53 @@ window.AXIAL_FIGURES = [
     "src": "assets/figures/results/remake-azimuth-vs-extension.webp",
     "width": 2200,
     "height": 1192
+  },
+  {
+    "id": "remake-model-comparison",
+    "tab": "results",
+    "group": "modeling",
+    "title": "Rebuilt models: two Mogi spheres vs Baillard's single Yang spheroid",
+    "caption": "The same 2015 → 2026 dike test with three inflation sources, each calibrated to the same Central Caldera uplift: the Kidiwela two-sphere Mogi model, Baillard's single Yang (1988) prolate spheroid (centre 8.84, 5.38 km, 3.81 km deep, a = 2.2 km, b = 0.38 km, plunging 77° toward 286°), and that spheroid plunging the other way. Left: observed vs modeled change per station (2 m dike, no extension). Middle: absolute fast direction vs modeled σHmax in each state. Right: RMS misfit of the change against dike opening. Only the two-sphere source lets the dike beat 'nothing changed' (12.1° vs 14.1°). With either Yang orientation the best opening is about zero, and adding the 2 m dike pushes the misfit to 24°.",
+    "badge": [],
+    "featured": true,
+    "src": "assets/figures/results/remake-model-comparison.webp",
+    "width": 2200,
+    "height": 673
+  },
+  {
+    "id": "remake-yang-dike-change",
+    "tab": "results",
+    "group": "modeling",
+    "title": "Rebuilt model, Yang spheroid — can the 2015 dike explain the rotation?",
+    "caption": "As the two-sphere dike test, with Baillard's Yang spheroid as the inflation source. The dike rotates the eastern stations by +19° to +32° and AXCC1 by −15°, so every non-zero opening fits the observed change worse than no change.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/remake-yang-dike-change.webp",
+    "width": 1800,
+    "height": 780
+  },
+  {
+    "id": "remake-yang-maps-2015",
+    "tab": "results",
+    "group": "modeling",
+    "title": "Rebuilt model, Yang spheroid — pre-eruption 2015",
+    "caption": "Uplift and σHmax ticks from the Yang spheroid alone (plus extension) at 2.4 m of Central Caldera uplift. The steep, elongated spheroid expands sideways like a dike: the uplift peak sits about 1.3 km down-plunge (WNW) of the centre, with a low above it. This is confirmed by an independent boundary-element model of the same cavity.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/remake-yang-maps-2015.webp",
+    "width": 2200,
+    "height": 733
+  },
+  {
+    "id": "remake-yang-maps-2026",
+    "tab": "results",
+    "group": "modeling",
+    "title": "Rebuilt model, Yang spheroid — pre-eruption 2026",
+    "caption": "As above for 2026: 2.6 m of re-inflation, the 2015 dike (red) and 11 years of extension.",
+    "badge": [],
+    "featured": false,
+    "src": "assets/figures/results/remake-yang-maps-2026.webp",
+    "width": 2200,
+    "height": 733
   }
 ];

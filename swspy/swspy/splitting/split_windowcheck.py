@@ -33,6 +33,7 @@ import gc
 import time 
 
 from scipy import signal
+from scipy import ndimage
 
 def get_dominant_period_baillard(data, fs, method='welch', nfft=256, num_wind=2, flag_plot=False):
     """
@@ -403,6 +404,70 @@ def ftest(data, dof, alpha=0.05, k=2, min_max='min'):
     F = stats.f.ppf(1-alpha, k, dof)
     conf_bound = data_minmax * ( 1 + ( k / (dof - k) ) * F)
     return conf_bound
+
+
+def _phi_and_lag_errors_from_conf_mask(conf_mask, lags_labels, phis_labels):
+    """phi and lag errors (= 1/2 the width of the confidence box, see Silver1991) of the
+    grid-search cells in <conf_mask> (lags x phis). Returns (phi_err, lag_err)."""
+    # Find lag dt error:
+    lag_mask = conf_mask.any(axis=1) # Condense axis1 down along lag (axis0)
+    true_idxs = np.where(lag_mask)[0]
+    if len(true_idxs) == 0:
+        # Artifically set error to zero, as cannot calculte error:
+        lag_err = 0.0 
+    else:
+        lag_step_s = lags_labels[1] - lags_labels[0]
+        lag_err = (true_idxs[-1] - true_idxs[0] + 1) * lag_step_s * 0.5 #0.25
+
+    # Find fast direction phi error:
+    # (Note: This must deal with angle symetry > 90 or < -90)
+    phi_mask = conf_mask.any(axis=0) # Condense axis0 down along phi (axis1)
+    phi_mask_with_pos_neg_overlap = np.hstack((phi_mask, phi_mask, phi_mask))
+    if len(np.where(phi_mask_with_pos_neg_overlap)[0]) > 0:
+        max_false_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() - 1
+        # shortest line that contains ALL true values is then:
+        max_true_len = len(phi_mask) - max_false_len
+        phi_step_deg = phis_labels[1] - phis_labels[0]
+        phi_err = max_true_len * phi_step_deg * 0.5 #0.25
+    else:
+        # Set phi error equal to zero, as not possible to calculate:
+        phi_err = 0.
+    return phi_err, lag_err
+
+
+# Grid-search cells within this relative distance of a window's minimum count as tied with it.
+# Floating-point noise in the surfaces is ~1e-15 relative, so this is well above rounding.
+TIE_REL_TOL = 1e-12
+
+
+def _pick_min_cell(surf, lags_labels, phis_labels, dof):
+    """(lag index, phi index) of the minimum of one window's grid-search surface (lags x phis).
+    Some cells tie by symmetry (e.g. in the XC surface at lag 0, phi and phi + 90 deg are
+    equal), and floating-point rounding alone would decide between them. Cells within
+    TIE_REL_TOL of the minimum are therefore treated as tied, and the one with the smallest
+    combined error lag_err**2 + phi_err**2 wins, each candidate's errors measured on its own
+    connected part of the confidence region (same F-test bound as
+    _get_phi_and_lag_errors_single_win). Candidates with equal errors are taken in grid order
+    (smallest lag, then most negative phi), as np.argmin would for exact ties."""
+    min_val = np.min(surf)
+    # np.argwhere is row-major, i.e. grid order:
+    cands = np.argwhere(np.abs(surf - min_val) <= TIE_REL_TOL * np.abs(min_val))
+    if len(cands) == 1:
+        return int(cands[0][0]), int(cands[0][1])
+    conf_mask = surf <= ftest(surf, dof, alpha=0.003, k=2)
+    regions, _ = ndimage.label(conf_mask)
+    # phi wraps round: -90 and +90 deg are the same direction, so join regions across that edge
+    for i in range(regions.shape[0]):
+        a, b = regions[i, 0], regions[i, -1]
+        if a and b and a != b:
+            regions[regions == b] = a
+    best, best_err = None, None
+    for i, j in cands:
+        phi_err, lag_err = _phi_and_lag_errors_from_conf_mask(regions == regions[i, j], lags_labels, phis_labels)
+        comb_err = lag_err**2 + phi_err**2
+        if best is None or comb_err < best_err:
+            best, best_err = (int(i), int(j)), comb_err
+    return best
 
 
 def _find_dom_freq(data_arr_Q, data_arr_T, fs):
@@ -1248,34 +1313,8 @@ class create_splitting_object:
         #conf_bound = ftest(error_surf, dof, alpha=0.32, k=2) # (1 sigma)
         conf_mask = error_surf <= conf_bound
 
-        # Find lag dt error:
-        # (= 1/2 (not 1/4) width of confidence box (see Silver1991))
-        lag_mask = conf_mask.any(axis=1) #(axis=0) # Condense axis1 down along lag (axis0)
-        true_idxs = np.where(lag_mask)[0]
-        if len(true_idxs) == 0:
-            # Artifically set error to zero, as cannot calculte error:
-            lag_err = 0.0 
-        else:
-            # Else calculate error, if possible:
-            lag_step_s = lags_labels[1] - lags_labels[0]
-            lag_err = (true_idxs[-1] - true_idxs[0] + 1) * lag_step_s * 0.5 #0.25
-
-        # Find fast direction phi error:
-        # (= 1/2 (not 1/4) width of confidence box (see Silver1991))
-        # (Note: This must deal with angle symetry > 90 or < -90)
-        phi_mask = conf_mask.any(axis=0) #(axis=1) # Condense axis0 down along phi (axis1)
-        phi_mask_with_pos_neg_overlap = np.hstack((phi_mask, phi_mask, phi_mask))
-        if len(np.where(phi_mask_with_pos_neg_overlap)[0]) > 0:
-            # Calculate phi error:
-            max_false_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() - 1
-            # shortest line that contains ALL true values is then:
-            max_true_len = len(phi_mask) - max_false_len
-            ###max_true_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() + 1
-            phi_step_deg = phis_labels[1] - phis_labels[0]
-            phi_err = max_true_len * phi_step_deg * 0.5 #0.25
-        else:
-            # Set phi error equal to zero, as not possible to calculate:
-            phi_err = 0.
+        # Find lag dt and fast direction phi errors (= 1/2 (not 1/4) width of confidence box (see Silver1991)):
+        phi_err, lag_err = _phi_and_lag_errors_from_conf_mask(conf_mask, lags_labels, phis_labels)
 
         return phi_err, lag_err 
 
@@ -1289,13 +1328,14 @@ class create_splitting_object:
         lag_errs = np.zeros(grid_search_results_all_win.shape[0])
         phi_errs = np.zeros(grid_search_results_all_win.shape[0])
         min_eig_ratios = np.zeros(grid_search_results_all_win.shape[0])
+        dof = calc_dof(tr_for_dof.data)
         # Loop over windows:
         for i in range(grid_search_results_all_win.shape[0]):
             grid_search_result_curr_win = grid_search_results_all_win[i,:,:]
-            # Get lag and phi:
-            min_idxs = np.where(grid_search_result_curr_win == np.min(grid_search_result_curr_win)) 
-            lags[i] = self.lags_labels[min_idxs[0][0]] 
-            phis[i] = self.phis_labels[min_idxs[1][0]]
+            # Get lag and phi (ties broken by smallest combined error, see _pick_min_cell):
+            lag_idx, phi_idx = _pick_min_cell(grid_search_result_curr_win, self.lags_labels, self.phis_labels, dof)
+            lags[i] = self.lags_labels[lag_idx] 
+            phis[i] = self.phis_labels[phi_idx]
             # Get associated error (from f-test with 95% confidence interval):
             # (Note: Uses transverse trace for dof estimation (see Silver and Chan 1991))
             phi_errs[i], lag_errs[i] = self._get_phi_and_lag_errors_single_win(grid_search_result_curr_win, self.lags_labels, self.phis_labels, tr_for_dof,

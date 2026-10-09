@@ -1,4 +1,4 @@
-function run_axial_dmodels()
+function run_axial_dmodels(model)
 %RUN_AXIAL_DMODELS Rebuild the Axial DMODELS-style deformation grids for 2015 and 2026.
 %
 %   Two pre-eruption states (parameters in axial_dmodels_params.m):
@@ -6,21 +6,28 @@ function run_axial_dmodels()
 %     pre_2026  inflation since 2015 + the 2015 dike + tectonic extension
 %   each written for every extension rate in p.extension.rates_per_yr.
 %
-%   Self-contained (Mogi + Okada 1985 + uniform extension); no DMODELS install needed.
+%   model picks the inflation source: 'two_sphere' (default, Kidiwela Mogi pair),
+%   'yang' (Baillard's single prolate spheroid) or 'yang_reversed' (its axis flipped).
+%
+%   Self-contained (Mogi or Yang 1988 + Okada 1985 + uniform extension); no DMODELS
+%   install needed.
 %   Outputs:
-%     p.out_dir (gitignored Axial_Deformation/remake_2015_2026/):
+%     p.out_dir (gitignored Axial_Deformation/remake_2015_2026/<model>/):
 %     def_<scenario>_rate<r>.xyzuvw   grids for scripts/deformation_util.read_disp_file
-%     p.summary_dir (tracked dmodels_axial/outputs/two_sphere/):
+%     p.summary_dir (tracked dmodels_axial/outputs/<model>/):
 %     manifest.csv                    source amplitudes behind every grid
 %     station_predictions.csv         most-compressive azimuth + sigma1-sigma2 per station
 %     station_components.csv          the same for each source on its own
 %     maps_<scenario>.png, station_azimuth_vs_extension.png
 %
-%   Run from this directory:  run_axial_dmodels
+%   Run from this directory:  run_axial_dmodels  or  run_axial_dmodels('yang')
 
 here = fileparts(mfilename('fullpath'));
 addpath(here);
-p = axial_dmodels_params();
+if nargin < 1
+    model = 'two_sphere';
+end
+p = axial_dmodels_params(model);
 if ~exist(p.out_dir, 'dir')
     mkdir(p.out_dir);
 end
@@ -55,7 +62,11 @@ fid = fopen(fullfile(p.summary_dir, 'station_components.csv'), 'wt');
 fprintf(fid, ['component,station,x_km,y_km,shmax_az_deg,stress_diff_MPa_per_unit,', ...
               'exx_per_unit,eyy_per_unit,exy_per_unit\n']);
 names = {'infl', 'dike', 'ext'};
-units = {'per m^3', 'at full opening', 'per unit strain'};
+if strcmp(p.inflation.model, 'yang')
+    units = {'per unit P/mu', 'at full opening', 'per unit strain'};
+else
+    units = {'per m^3', 'at full opening', 'per unit strain'};
+end
 for c = 1:numel(names)
     [az, df, e] = station_stress(S.(names{c}), n_sta, p.fd_step_m, mu, nu);
     for k = 1:n_sta
@@ -70,7 +81,7 @@ fclose(fid);
 % ---------------------------------------------------------------- scenarios
 fman = fopen(fullfile(p.summary_dir, 'manifest.csv'), 'wt');
 fprintf(fman, ['file,scenario,rate_per_yr,years,ext_strain,ext_azimuth_deg,', ...
-               'infl_dV_m3,uplift_ref_m,dike_opening_m\n']);
+               'infl_model,infl_scale,uplift_ref_m,dike_opening_m\n']);
 fsta = fopen(fullfile(p.summary_dir, 'station_predictions.csv'), 'wt');
 fprintf(fsta, ['scenario,rate_per_yr,ext_strain,station,x_km,y_km,uz_m,', ...
                'shmax_az_deg,stress_diff_MPa\n']);
@@ -96,8 +107,8 @@ for s = 1:n_scen
         U = combine(G, w);
         fname = sprintf('def_%s_rate%.0e.xyzuvw', sc.name, rates(r));
         write_xyzuvw(fullfile(p.out_dir, fname), X, Y, U.ux, U.uy, U.uz);
-        fprintf(fman, '%s,%s,%.3e,%.2f,%.4e,%.1f,%.6e,%.3f,%.2f\n', fname, sc.name, ...
-                rates(r), sc.years, strain, p.extension.azimuth_deg, dV, ...
+        fprintf(fman, '%s,%s,%.3e,%.2f,%.4e,%.1f,%s,%.6e,%.3f,%.2f\n', fname, sc.name, ...
+                rates(r), sc.years, strain, p.extension.azimuth_deg, model, dV, ...
                 dV * R.infl.uz, dike_w * p.dike.opening_m);
 
         US = combine(S, w);
@@ -113,8 +124,9 @@ for s = 1:n_scen
             subplot(1, numel(map_rates), i_map);
             plot_map(X, Y, U, mu, nu, sx, sy, p.stations.name, ...
                      dike_xy, sc.include_dike);
-            title(sprintf('%s, extension %.0e /yr (strain %.1e)', ...
-                          strrep(sc.name, '_', ' '), rates(r), strain));
+            title(sprintf('%s (%s), extension %.0e /yr (strain %.1e)', ...
+                          strrep(sc.name, '_', ' '), strrep(model, '_', ' '), ...
+                          rates(r), strain));
         end
     end
     print(fig, fullfile(p.summary_dir, sprintf('maps_%s.png', sc.name)), '-dpng', '-r150');

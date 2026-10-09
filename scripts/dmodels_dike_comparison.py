@@ -11,7 +11,8 @@ Observed, per station (Grade 3, circular mean of phi mod 180):
                   bins in rose_7period_regions_windowcheck_grade3_ccal_periods.py
     dphi_obs = period 5 - pre, wrapped to [-90, 90)
 
-Modeled, from dmodels_axial/run_axial_dmodels.m (station_components.csv holds the strain
+Modeled, from dmodels_axial/run_axial_dmodels.m for one inflation model (--model:
+two_sphere, yang or yang_reversed; station_components.csv holds the strain
 of each unit source at each station, so scenarios are rebuilt by superposition):
     pre_2015         inflation (2.4 m) + extension (rate * 4.05 yr)
     pre_2026         inflation (2.6 m) + extension (rate * 11.05 yr) + 2015 dike
@@ -27,12 +28,12 @@ P5_START: the BOTPT file that defines the period boundaries
 (data/bpr_detided_seafloor_depth_ccal_*.csv) is not in data/, so the start is taken from the
 published rose figure label ("Jan 2021 - present") and its sensitivity is reported.
 
-Outputs (dmodels_axial/outputs/two_sphere/, next to the model tables):
+Outputs (dmodels_axial/outputs/<model>/, next to the model tables):
     dmodels_dike_comparison.csv
     dmodels_dike_comparison.png
 
 Run with:
-    python3 dmodels_dike_comparison.py [--p5-start 2021-01-01]
+    python3 dmodels_dike_comparison.py [--model two_sphere] [--p5-start 2021-01-01]
 """
 
 import argparse
@@ -48,9 +49,8 @@ import rose_7period_regions_windowcheck_grade3 as g3
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.join(HERE, '..')
-# Model station tables and this script's outputs share the tracked dmodels_axial/outputs folder
-MODEL_DIR = os.path.join(REPO, 'dmodels_axial', 'outputs', 'two_sphere')
-OUT_DIR = MODEL_DIR
+# Model station tables and this script's outputs share dmodels_axial/outputs/<model>/
+OUTPUTS_DIR = os.path.join(REPO, 'dmodels_axial', 'outputs')
 
 # The Grade-3 inputs were delivered under data/ rather than the loader's default locations
 DATA_DIR = os.path.join(REPO, 'data')
@@ -98,9 +98,9 @@ def observed_change(p5_start):
     return pd.DataFrame(rows).set_index('station')
 
 
-def load_model():
-    comp = pd.read_csv(os.path.join(MODEL_DIR, 'station_components.csv'))
-    man = pd.read_csv(os.path.join(MODEL_DIR, 'manifest.csv'))
+def load_model(model_dir):
+    comp = pd.read_csv(os.path.join(model_dir, 'station_components.csv'))
+    man = pd.read_csv(os.path.join(model_dir, 'manifest.csv'))
     E = {c: comp[comp.component == c].set_index('station').loc[
             STATIONS, ['exx_per_unit', 'eyy_per_unit', 'exy_per_unit']].values
          for c in ('infl', 'dike', 'ext')}
@@ -111,8 +111,8 @@ def load_model():
 
 def model_azimuths(E, sc, rate, opening_scale):
     s15, s26 = sc['pre_2015'], sc['pre_2026']
-    e15 = s15.infl_dV_m3 * E['infl'] + rate * s15.years * E['ext']
-    e26_nodike = s26.infl_dV_m3 * E['infl'] + rate * s26.years * E['ext']
+    e15 = s15.infl_scale * E['infl'] + rate * s15.years * E['ext']
+    e26_nodike = s26.infl_scale * E['infl'] + rate * s26.years * E['ext']
     e26 = e26_nodike + opening_scale * E['dike']
     return shmax_azimuth(*e15.T), shmax_azimuth(*e26.T), shmax_azimuth(*e26_nodike.T)
 
@@ -123,12 +123,14 @@ def rms(x):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument('--model', default='two_sphere')
     ap.add_argument('--p5-start', default=P5_START_DEFAULT)
     args = ap.parse_args()
-    os.makedirs(OUT_DIR, exist_ok=True)
+    out_dir = os.path.join(OUTPUTS_DIR, args.model)
 
     obs = observed_change(args.p5_start)
-    E, sc, rates = load_model()
+    E, sc, rates = load_model(out_dir)
+    print(f'Inflation model: {args.model}')
     d_obs = obs['dphi_obs'].values
 
     print(f'Observed (Grade 3), pre-eruption vs period 5 from {args.p5_start}:')
@@ -145,7 +147,8 @@ def main():
         k_best = OPENING_SCALES[int(np.argmin(scan))]
         for i, sta in enumerate(STATIONS):
             rows.append(dict(rate_per_yr=rate, station=sta,
-                             phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_p5_obs=obs.loc[sta, 'phi_p5'],
+                             phi_pre_obs=obs.loc[sta, 'phi_pre'], phi_pre_se=obs.loc[sta, 'se_pre'],
+                             phi_p5_obs=obs.loc[sta, 'phi_p5'], phi_p5_se=obs.loc[sta, 'se_p5'],
                              dphi_obs=d_obs[i], dphi_obs_se=obs.loc[sta, 'dphi_obs_se'],
                              az_2015=az15[i], az_2026=az26[i], az_2026_nodike=az26n[i],
                              dphi_model_dike=d_dike[i], dphi_model_nodike=d_nodike[i]))
@@ -160,17 +163,17 @@ def main():
         print('   dike model dphi: ' + '  '.join(f'{s} {d:+6.1f}' for s, d in zip(STATIONS, d_dike)))
 
     out = pd.DataFrame(rows)
-    out.to_csv(os.path.join(OUT_DIR, 'dmodels_dike_comparison.csv'), index=False)
+    out.to_csv(os.path.join(out_dir, 'dmodels_dike_comparison.csv'), index=False)
 
     for alt in P5_SENSITIVITY:
         d_alt = observed_change(alt)['dphi_obs']
         print(f'\nP5 start {alt}: dphi_obs ' +
               '  '.join(f'{s} {d:+6.1f}' for s, d in d_alt.items()))
 
-    plot(out, obs, E, sc, rates, args.p5_start)
+    plot(out, obs, E, sc, rates, args.p5_start, args.model, out_dir)
 
 
-def plot(out, obs, E, sc, rates, p5_start):
+def plot(out, obs, E, sc, rates, p5_start, model, out_dir):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5.2))
     show = [0.0, 1e-5, 3e-5]
     colors = ['#0072B2', '#E69F00', '#CC79A7']
@@ -204,9 +207,10 @@ def plot(out, obs, E, sc, rates, p5_start):
     ax2.set_ylabel('RMS(observed $-$ modeled $\\Delta\\phi$) over 6 stations (deg)')
     ax2.set_title('How much dike does the change want?')
     ax2.legend(fontsize=8, title='extension rate')
-    fig.suptitle(f'Grade 3: pre-eruption 2015 vs period 5 (from {p5_start})')
+    fig.suptitle(f'Grade 3: pre-eruption 2015 vs period 5 (from {p5_start}), '
+                 f'{model.replace("_", " ")} inflation')
     fig.tight_layout()
-    path = os.path.join(OUT_DIR, 'dmodels_dike_comparison.png')
+    path = os.path.join(out_dir, 'dmodels_dike_comparison.png')
     fig.savefig(path, dpi=150)
     print(f'\nSaved {path}')
 

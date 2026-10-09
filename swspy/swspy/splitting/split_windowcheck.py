@@ -33,6 +33,7 @@ import gc
 import time 
 
 from scipy import signal
+from scipy import ndimage
 
 def get_dominant_period_baillard(data, fs, method='welch', nfft=256, num_wind=2, flag_plot=False):
     """
@@ -405,6 +406,70 @@ def ftest(data, dof, alpha=0.05, k=2, min_max='min'):
     return conf_bound
 
 
+def _phi_and_lag_errors_from_conf_mask(conf_mask, lags_labels, phis_labels):
+    """phi and lag errors (= 1/2 the width of the confidence box, see Silver1991) of the
+    grid-search cells in <conf_mask> (lags x phis). Returns (phi_err, lag_err)."""
+    # Find lag dt error:
+    lag_mask = conf_mask.any(axis=1) # Condense axis1 down along lag (axis0)
+    true_idxs = np.where(lag_mask)[0]
+    if len(true_idxs) == 0:
+        # Artifically set error to zero, as cannot calculte error:
+        lag_err = 0.0 
+    else:
+        lag_step_s = lags_labels[1] - lags_labels[0]
+        lag_err = (true_idxs[-1] - true_idxs[0] + 1) * lag_step_s * 0.5 #0.25
+
+    # Find fast direction phi error:
+    # (Note: This must deal with angle symetry > 90 or < -90)
+    phi_mask = conf_mask.any(axis=0) # Condense axis0 down along phi (axis1)
+    phi_mask_with_pos_neg_overlap = np.hstack((phi_mask, phi_mask, phi_mask))
+    if len(np.where(phi_mask_with_pos_neg_overlap)[0]) > 0:
+        max_false_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() - 1
+        # shortest line that contains ALL true values is then:
+        max_true_len = len(phi_mask) - max_false_len
+        phi_step_deg = phis_labels[1] - phis_labels[0]
+        phi_err = max_true_len * phi_step_deg * 0.5 #0.25
+    else:
+        # Set phi error equal to zero, as not possible to calculate:
+        phi_err = 0.
+    return phi_err, lag_err
+
+
+# Grid-search cells within this relative distance of a window's minimum count as tied with it.
+# Floating-point noise in the surfaces is ~1e-15 relative, so this is well above rounding.
+TIE_REL_TOL = 1e-12
+
+
+def _pick_min_cell(surf, lags_labels, phis_labels, dof):
+    """(lag index, phi index) of the minimum of one window's grid-search surface (lags x phis).
+    Some cells tie by symmetry (e.g. in the XC surface at lag 0, phi and phi + 90 deg are
+    equal), and floating-point rounding alone would decide between them. Cells within
+    TIE_REL_TOL of the minimum are therefore treated as tied, and the one with the smallest
+    combined error lag_err**2 + phi_err**2 wins, each candidate's errors measured on its own
+    connected part of the confidence region (same F-test bound as
+    _get_phi_and_lag_errors_single_win). Candidates with equal errors are taken in grid order
+    (smallest lag, then most negative phi), as np.argmin would for exact ties."""
+    min_val = np.min(surf)
+    # np.argwhere is row-major, i.e. grid order:
+    cands = np.argwhere(np.abs(surf - min_val) <= TIE_REL_TOL * np.abs(min_val))
+    if len(cands) == 1:
+        return int(cands[0][0]), int(cands[0][1])
+    conf_mask = surf <= ftest(surf, dof, alpha=0.003, k=2)
+    regions, _ = ndimage.label(conf_mask)
+    # phi wraps round: -90 and +90 deg are the same direction, so join regions across that edge
+    for i in range(regions.shape[0]):
+        a, b = regions[i, 0], regions[i, -1]
+        if a and b and a != b:
+            regions[regions == b] = a
+    best, best_err = None, None
+    for i, j in cands:
+        phi_err, lag_err = _phi_and_lag_errors_from_conf_mask(regions == regions[i, j], lags_labels, phis_labels)
+        comb_err = lag_err**2 + phi_err**2
+        if best is None or comb_err < best_err:
+            best, best_err = (int(i), int(j)), comb_err
+    return best
+
+
 def _find_dom_freq(data_arr_Q, data_arr_T, fs):
     """
     Find dominant frequency of shear-wave.
@@ -480,7 +545,59 @@ def _phi_dt_grid_search(data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, n_
                         # if np.std(rolled_rot_Q_curr)  * np.std(rolled_rot_T_curr) > 0. and len(rolled_rot_T_curr) > 0:
                     grid_search_results_all_win_XC[grid_search_idx,i,j] = np.sum( np.abs(rolled_rot_Q_curr * rolled_rot_T_curr) / (np.std(rolled_rot_Q_curr) * np.std(rolled_rot_T_curr))) / float(len(rolled_rot_T_curr))
 
-    return grid_search_results_all_win_EV, grid_search_results_all_win_XC 
+    return grid_search_results_all_win_EV, grid_search_results_all_win_XC
+
+
+@jit(nopython=True, parallel=True)
+def _phi_dt_grid_search_no_wrap(data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, pad_samples, n_t_steps, n_angle_steps, n_win, fs, rotate_step_deg,
+                                    grid_search_results_all_win_EV, grid_search_results_all_win_XC):
+    """As _phi_dt_grid_search, but time-shifts with real data instead of a cyclic np.roll.
+    np.roll wraps samples pushed off one end of the window back in at the other, which makes
+    (phi, lag L) and (phi + 90 deg, lag n - L) exactly equal for a window of n samples, so
+    which one is the minimum is decided by floating-point rounding. Here the shifted rotated
+    Q is taken from the samples before the window and the shifted rotated T from the samples
+    after it, so every lag compares the same n genuine samples.
+    <data_arr_Q> and <data_arr_T> must extend at least int((n_t_steps - 1) / 2) samples beyond
+    every window on both sides; window indices are relative to the unpadded trace and are
+    offset by <pad_samples> here. Lag 0 is identical to _phi_dt_grid_search."""
+    max_shift = int((n_t_steps - 1) / 2.)
+    # Loop over start and end windows:
+    for a in range(n_win):
+        start_win_idx = win_start_idxs[a] + pad_samples
+        for b in range(n_win):
+            end_win_idx = win_end_idxs[b] + pad_samples
+            n_samp = end_win_idx - start_win_idx
+            grid_search_idx = int(n_win*a + b)
+
+            # Loop over angles:
+            for j in prange(n_angle_steps):
+                angle_shift_rad_curr = ((float(j) * rotate_step_deg) - 90.) * np.pi / 180. # (Note: -90 as should loop between -90 and 90 (see phi_labels))
+
+                # Rotate QT waveforms by angle, over the window plus the shift margin on each side:
+                theta_rot = -angle_shift_rad_curr
+                rot_T_ext = (data_arr_T[start_win_idx-max_shift:end_win_idx+max_shift] * np.cos(theta_rot)) - (data_arr_Q[start_win_idx-max_shift:end_win_idx+max_shift] * np.sin(theta_rot))
+                rot_Q_ext = (data_arr_T[start_win_idx-max_shift:end_win_idx+max_shift] * np.sin(theta_rot)) + (data_arr_Q[start_win_idx-max_shift:end_win_idx+max_shift] * np.cos(theta_rot))
+
+                # Loop over time shifts:
+                for i in range(n_t_steps):
+                    t_samp_shift_curr = int(i/2.)
+                    # Delay rot Q by the shift (np.roll(rot_Q, +s)[k] = rot_Q[k - s]) and advance
+                    # rot T (np.roll(rot_T, -s)[k] = rot_T[k + s]), taking the samples from
+                    # outside the window rather than wrapping the window onto itself:
+                    shifted_rot_Q_curr = rot_Q_ext[max_shift-t_samp_shift_curr:max_shift-t_samp_shift_curr+n_samp]
+                    shifted_rot_T_curr = rot_T_ext[max_shift+t_samp_shift_curr:max_shift+t_samp_shift_curr+n_samp]
+
+                    # ================== Calculate splitting parameters via. EV method ==================
+                    xy_arr = np.vstack((shifted_rot_T_curr, shifted_rot_Q_curr))
+                    lambdas_unsort = np.linalg.eigvalsh(np.cov(xy_arr))
+                    lambda2 = np.min(lambdas_unsort)
+                    lambda1 = np.max(lambdas_unsort)
+                    grid_search_results_all_win_EV[grid_search_idx,i,j] = lambda2 / lambda1
+
+                    # ================== Calculate splitting parameters via. XC method ==================
+                    grid_search_results_all_win_XC[grid_search_idx,i,j] = np.sum( np.abs(shifted_rot_Q_curr * shifted_rot_T_curr) / (np.std(shifted_rot_Q_curr) * np.std(shifted_rot_T_curr))) / float(len(shifted_rot_T_curr))
+
+    return grid_search_results_all_win_EV, grid_search_results_all_win_XC
 
 
 #@jit((float64[:], float64[:], int64[:], int64[:], int64, int64, int64, float64, float64, float64[:,:,:,:,:], float64[:,:,:,:,:]), nopython=True, parallel=True)
@@ -997,6 +1114,8 @@ class create_splitting_object:
             # window_end multipliers of 1.5/2.5, that span is already exactly one Tmid) rather
             # than the first_window_end/last_window_end multipliers themselves. Start windows
             # (win_S_pick_tolerance, overall_win_start_pre_fast_S_pick) are left untouched.
+            # (The single-layer grid search no longer wraps -- _phi_dt_grid_search_no_wrap shifts
+            # with the real samples around each window -- but this minimum length is kept.)
             shortest_window_s = self.overall_win_start_post_fast_S_pick + self.win_S_pick_tolerance
             if shortest_window_s < self.max_t_shift_s:
                 print(f"Warning: shortest candidate window ({shortest_window_s:.4f}s) is shorter "
@@ -1102,10 +1221,17 @@ class create_splitting_object:
         return win_start_idxs, win_end_idxs
     
 
-    def _calc_splitting_eig_val_method(self, data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, sws_method="EV", n_layers=1, layer_1_dts_phis=None, layer_2_dts_phis=None, num_threads=numba.config.NUMBA_DEFAULT_NUM_THREADS):
+    def _calc_splitting_eig_val_method(self, data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, sws_method="EV", n_layers=1, layer_1_dts_phis=None, layer_2_dts_phis=None, num_threads=numba.config.NUMBA_DEFAULT_NUM_THREADS,
+                                       pad_samples=None):
         """
         Function to calculate splitting via eigenvalue method.
         sws_method can be EV (eigenvalue) or EV_and_XC (eigenvalue and cross-correlation). EV_and_XC is for automation as in Wustefeld et al. (2010).
+        pad_samples : int or None
+            If given, <data_arr_Q> and <data_arr_T> start <pad_samples> samples before the
+            trace the window indices refer to and extend past every window by the largest
+            shift, and the single-layer grid search time-shifts with that real data
+            (_phi_dt_grid_search_no_wrap). If None, it uses the cyclic np.roll shift
+            (_phi_dt_grid_search), as the multi-layer analysis still does.
         Note: 
         """
         # Perform initial checks:
@@ -1138,7 +1264,12 @@ class create_splitting_object:
         #     sys.exit()
 
         # Perform grid search:
-        if n_layers == 1:
+        if n_layers == 1 and pad_samples is not None:
+            max_shift = int((n_t_steps - 1) / 2.)
+            if pad_samples < max_shift or np.max(win_end_idxs) + pad_samples + max_shift > min(len(data_arr_Q), len(data_arr_T)):
+                raise CustomError("Not enough data around the windows to time-shift without wrapping.")
+            grid_search_results_all_win_EV, grid_search_results_all_win_XC = _phi_dt_grid_search_no_wrap(data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, int(pad_samples), n_t_steps, n_angle_steps, n_win, fs, rotate_step_deg, grid_search_results_all_win_EV, grid_search_results_all_win_XC)
+        elif n_layers == 1:
             grid_search_results_all_win_EV, grid_search_results_all_win_XC = _phi_dt_grid_search(data_arr_Q, data_arr_T, win_start_idxs, win_end_idxs, n_t_steps, n_angle_steps, n_win, fs, rotate_step_deg, grid_search_results_all_win_EV, grid_search_results_all_win_XC)
         elif n_layers == 2:
             set_num_threads(int(num_threads))
@@ -1182,34 +1313,8 @@ class create_splitting_object:
         #conf_bound = ftest(error_surf, dof, alpha=0.32, k=2) # (1 sigma)
         conf_mask = error_surf <= conf_bound
 
-        # Find lag dt error:
-        # (= 1/2 (not 1/4) width of confidence box (see Silver1991))
-        lag_mask = conf_mask.any(axis=1) #(axis=0) # Condense axis1 down along lag (axis0)
-        true_idxs = np.where(lag_mask)[0]
-        if len(true_idxs) == 0:
-            # Artifically set error to zero, as cannot calculte error:
-            lag_err = 0.0 
-        else:
-            # Else calculate error, if possible:
-            lag_step_s = lags_labels[1] - lags_labels[0]
-            lag_err = (true_idxs[-1] - true_idxs[0] + 1) * lag_step_s * 0.5 #0.25
-
-        # Find fast direction phi error:
-        # (= 1/2 (not 1/4) width of confidence box (see Silver1991))
-        # (Note: This must deal with angle symetry > 90 or < -90)
-        phi_mask = conf_mask.any(axis=0) #(axis=1) # Condense axis0 down along phi (axis1)
-        phi_mask_with_pos_neg_overlap = np.hstack((phi_mask, phi_mask, phi_mask))
-        if len(np.where(phi_mask_with_pos_neg_overlap)[0]) > 0:
-            # Calculate phi error:
-            max_false_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() - 1
-            # shortest line that contains ALL true values is then:
-            max_true_len = len(phi_mask) - max_false_len
-            ###max_true_len = np.diff(np.where(phi_mask_with_pos_neg_overlap)).max() + 1
-            phi_step_deg = phis_labels[1] - phis_labels[0]
-            phi_err = max_true_len * phi_step_deg * 0.5 #0.25
-        else:
-            # Set phi error equal to zero, as not possible to calculate:
-            phi_err = 0.
+        # Find lag dt and fast direction phi errors (= 1/2 (not 1/4) width of confidence box (see Silver1991)):
+        phi_err, lag_err = _phi_and_lag_errors_from_conf_mask(conf_mask, lags_labels, phis_labels)
 
         return phi_err, lag_err 
 
@@ -1223,13 +1328,14 @@ class create_splitting_object:
         lag_errs = np.zeros(grid_search_results_all_win.shape[0])
         phi_errs = np.zeros(grid_search_results_all_win.shape[0])
         min_eig_ratios = np.zeros(grid_search_results_all_win.shape[0])
+        dof = calc_dof(tr_for_dof.data)
         # Loop over windows:
         for i in range(grid_search_results_all_win.shape[0]):
             grid_search_result_curr_win = grid_search_results_all_win[i,:,:]
-            # Get lag and phi:
-            min_idxs = np.where(grid_search_result_curr_win == np.min(grid_search_result_curr_win)) 
-            lags[i] = self.lags_labels[min_idxs[0][0]] 
-            phis[i] = self.phis_labels[min_idxs[1][0]]
+            # Get lag and phi (ties broken by smallest combined error, see _pick_min_cell):
+            lag_idx, phi_idx = _pick_min_cell(grid_search_result_curr_win, self.lags_labels, self.phis_labels, dof)
+            lags[i] = self.lags_labels[lag_idx] 
+            phis[i] = self.phis_labels[phi_idx]
             # Get associated error (from f-test with 95% confidence interval):
             # (Note: Uses transverse trace for dof estimation (see Silver and Chan 1991))
             phi_errs[i], lag_errs[i] = self._get_phi_and_lag_errors_single_win(grid_search_result_curr_win, self.lags_labels, self.phis_labels, tr_for_dof,
@@ -1630,6 +1736,14 @@ class create_splitting_object:
                 arrival_time_curr = self.nonlinloc_hyp_data.phase_data[station]['S']['arrival_time']
             else:
                 arrival_time_curr = self.S_phase_arrival_times[station_idx_tmp]
+            # The grid search time-shifts each window with the real samples around it rather than
+            # wrapping it onto itself, so it needs data before the first window start too. Keep a
+            # copy padded by half the maximum shift (the shift applied to each of rot Q and rot T)
+            # at the start; the end already extends max_t_shift_s past the last window end.
+            # (The unpadded trim below is unchanged and still used for dof, Q_w and plotting.)
+            st_LQT_curr_padded = st_LQT_curr.copy()
+            st_LQT_curr_padded.trim(starttime=arrival_time_curr - self.overall_win_start_pre_fast_S_pick - (self.max_t_shift_s / 2.),
+                                endtime=arrival_time_curr + self.overall_win_end_post_fast_S_pick + self.max_t_shift_s)
             st_LQT_curr.trim(starttime=arrival_time_curr - self.overall_win_start_pre_fast_S_pick,
                                 #endtime=arrival_time_curr + self.overall_win_start_post_fast_S_pick + self.max_t_shift_s)
                                 endtime=arrival_time_curr + self.overall_win_end_post_fast_S_pick + self.max_t_shift_s)
@@ -1644,6 +1758,16 @@ class create_splitting_object:
                 print("Warning: Insufficient data to perform splitting. Skipping this event-receiver observation.")
                 continue
 
+            try:
+                tr_Q_padded = st_LQT_curr_padded.select(station=station, channel="??Q")[0]
+                tr_T_padded = st_LQT_curr_padded.select(station=station, channel="??T")[0]
+            except IndexError:
+                print("Warning: Insufficient data to perform splitting. Skipping this event-receiver observation.")
+                continue
+            # Samples of padding before the unpadded trace start (both traces share a time base):
+            pad_samples = int(round((tr_T.stats.starttime - tr_T_padded.stats.starttime) * tr_T.stats.sampling_rate))
+            del st_LQT_curr_padded
+
             # 3. Get window indices:
             self.fs = tr_T.stats.sampling_rate
             win_start_idxs, win_end_idxs = self._select_windows()
@@ -1652,12 +1776,21 @@ class create_splitting_object:
             # (Silver and Chan (1991) and Teanby2004 eigenvalue method)
             # 4.a. Get data for all windows:
             if self.sws_method == "EV":
-                grid_search_results_all_win_EV, lags_labels, phis_labels = self._calc_splitting_eig_val_method(tr_Q.data, tr_T.data, win_start_idxs, win_end_idxs, 
-                                                                                                                    sws_method=self.sws_method, num_threads=num_threads)
+                try:
+                    grid_search_results_all_win_EV, lags_labels, phis_labels = self._calc_splitting_eig_val_method(tr_Q_padded.data, tr_T_padded.data, win_start_idxs, win_end_idxs, 
+                                                                                                                    sws_method=self.sws_method, num_threads=num_threads,
+                                                                                                                    pad_samples=pad_samples)
+                except CustomError as e:
+                    print("Warning:", e, "Skipping station:", station)
+                    continue
             elif self.sws_method == "EV_and_XC":
                 try:
-                    grid_search_results_all_win_EV, grid_search_results_all_win_XC, lags_labels, phis_labels = self._calc_splitting_eig_val_method(tr_Q.data, tr_T.data, win_start_idxs, win_end_idxs, 
-                                                                                                                    sws_method=self.sws_method, num_threads=num_threads)
+                    grid_search_results_all_win_EV, grid_search_results_all_win_XC, lags_labels, phis_labels = self._calc_splitting_eig_val_method(tr_Q_padded.data, tr_T_padded.data, win_start_idxs, win_end_idxs, 
+                                                                                                                    sws_method=self.sws_method, num_threads=num_threads,
+                                                                                                                    pad_samples=pad_samples)
+                except CustomError as e:
+                    print("Warning:", e, "Skipping station:", station)
+                    continue
                 except np.linalg.LinAlgError:
                     # And check that returned values without issues:
                     print("Warning: NaN error in _calc_splitting_eig_val_method(). Skipping station:", station)
